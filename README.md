@@ -43,6 +43,6 @@
 ---
 
 ## 👥 สมาชิกผู้พัฒนา (Developers)
-* **Nuttaphat** ([@flame123-np](https://github.com/flame123-np))
+* **Nuttaphat** ([@Catboyz-45](https://github.com/Catboyz-45))
 
 *(หมายเหตุ: โปรเจกต์นี้เป็นส่วนหนึ่งของรายวิชาInformation System Analysis and Design(02739322)ในภาคการศึกษา 2568 กลุ่มเรียน 820)*
