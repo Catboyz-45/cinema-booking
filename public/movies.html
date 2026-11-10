@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
   <script src="movies-data.js"></script>
   <script>
     tailwind.config = {
@@ -122,7 +124,8 @@
   </footer>
 
   <script>
-    (() => {
+    (async () => {
+        await window.cinemaApi.catalog();
       const moviesGrid = document.getElementById('movies-grid');
       const filterButtons = document.querySelectorAll('.filter-btn');
       const pageSearchInput = document.getElementById('page-search-input');
@@ -162,21 +165,6 @@
         }));
       }
 
-      function getDefaultShowtime(movieId) {
-        const movie = moviesDatabase[movieId];
-        if (!movie || !movie.showtimes || movie.showtimes.length === 0) return null;
-        const cinema = movie.showtimes[0];
-        const system = cinema.systems[0];
-        const time = system.times[0];
-        const showtimeId = `st-${movieId}-${time.time.replace(':', '')}-${time.hall.toLowerCase().replace(/\s+/g, '-')}`;
-        return {
-          movieId,
-          time: time.time,
-          hall: time.hall,
-          showtimeId
-        };
-      }
-
       const allMovies = Object.values(moviesDatabase).map((movie) => ({
         ...movie,
         normalizedGenres: (movie.genres || []).map(normalizeGenreLabel)
@@ -196,17 +184,7 @@
           if (buyBtn) {
             buyBtn.addEventListener('click', (event) => {
               event.stopPropagation();
-              window.authModule.requireLogin(() => {
-                const showtime = getDefaultShowtime(movieId);
-                if (!showtime) {
-                  alert('ไม่พบข้อมูลรอบฉายสำหรับหนังเรื่องนี้');
-                  return;
-                }
-                sessionStorage.setItem('selectedMovieId', showtime.movieId);
-                sessionStorage.setItem('selectedTime', showtime.time);
-                sessionStorage.setItem('selectedHall', showtime.hall);
-                window.location.href = `seat-selection.html?showtimeId=${encodeURIComponent(showtime.showtimeId)}`;
-              });
+              window.location.href = `movie-details.html?id=${encodeURIComponent(movieId)}#showtimes-container`;
             });
           }
         });
@@ -370,21 +348,10 @@
     </div>
 
     <script type="module">
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
-      import { initializeAuthUI } from './auth.js';
+    import { app, firebaseConfig } from './firebase-init.js';
+    import { initializeAuthUI } from './auth.js';
 
-      const firebaseConfig = {
-        apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-        authDomain: 'frame-4e170.firebaseapp.com',
-        projectId: 'frame-4e170',
-        storageBucket: 'frame-4e170.firebasestorage.app',
-        messagingSenderId: '585102075629',
-        appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-        measurementId: 'G-0TCR1Y4LP2'
-      };
-
-      const app = initializeApp(firebaseConfig);
-      initializeAuthUI(app, firebaseConfig);
-    </script>
+    initializeAuthUI(app, firebaseConfig);
+</script>
 </body>
 </html>

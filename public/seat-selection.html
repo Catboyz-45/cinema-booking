@@ -5,6 +5,8 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Cinema Booking - Seat Selection</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
 <script src="movies-data.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -52,13 +54,28 @@
             cursor: not-allowed !important;
         }
 
+        /* Phones: shrink the seat map so every seat fits on screen (no hidden right-hand seats). */
+        @media (max-width: 639px) {
+            .seat-card { padding: 1rem !important; }
+            .seat-map-scroll { overflow-x: visible !important; padding-bottom: 1rem !important; }
+            .seat-map { min-width: 0 !important; }
+            .seat-map .size-10, .seat-map .size-9 { width: 1.9rem !important; height: 1.9rem !important; font-size: 0.65rem !important; }
+            .seat-map .w-24 { width: 4.25rem !important; height: 2.5rem !important; }
+            .seat-map .w-24 .material-symbols-outlined { display: none; }
+            .seat-map .gap-2 { gap: 0.25rem !important; }
+            .seat-map .gap-3 { gap: 0.375rem !important; }
+            .seat-map .gap-4 { gap: 0.5rem !important; }
+            .seat-map .w-8 { width: 0.5rem !important; }
+            .seat-map .w-6:last-child { display: none; }
+            body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+        }
         .seat-label-unavailable .material-symbols-outlined {
             color: #64748b !important;
             font-variation-settings: 'FILL' 0;
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col">
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col" data-no-bottom-nav>
 <!-- Navbar -->
 <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-border px-4 md:px-10 py-3">
 <div class="layout-container max-w-7xl mx-auto flex items-center justify-between whitespace-nowrap">
@@ -77,10 +94,7 @@
 <span class="text-sm font-medium" id="user-name-display">คุณธนภัทร</span>
 </div>
 </div>
-<!-- Mobile Menu Icon -->
-<button class="md:hidden p-2 text-slate-600">
-<span class="material-symbols-outlined">menu</span>
-</button>
+
 </div>
 </header>
 <!-- Progress Bar -->
@@ -111,7 +125,7 @@
 <!-- Main Content -->
 <main class="flex-grow layout-container max-w-7xl mx-auto w-full p-4 md:px-10 md:py-8 flex flex-col lg:flex-row gap-8">
 <!-- Left Column: Seat Map -->
-<div class="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-neutral-border p-6 md:p-8">
+<div class="seat-card flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-neutral-border p-6 md:p-8">
 <!-- Movie Info Header (Mobile/Tablet only, sticky on bottom for desktop sidebar) -->
 <div class="mb-8 flex flex-col gap-1">
 <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">เลือกที่นั่ง (Select Seats)</h1>
@@ -123,8 +137,8 @@
 <p class="text-slate-400 text-xs font-bold tracking-widest uppercase">หน้าจอ (SCREEN)</p>
 </div>
 <!-- Seat Map Container -->
-<div class="w-full overflow-x-auto pb-8">
-<div class="min-w-[600px] flex flex-col gap-6 items-center mx-auto">
+<div class="seat-map-scroll w-full overflow-x-auto pb-8">
+<div class="seat-map min-w-[600px] flex flex-col gap-6 items-center mx-auto">
 <!-- Sofa Seats (Top Tier) -->
 <div class="flex flex-col gap-2 w-full items-center mb-4">
 <div class="flex gap-4 mb-2">
@@ -157,7 +171,7 @@
 </div>
 <span class="w-6 text-slate-400 font-bold flex items-center justify-center">A</span>
 </div>
-<p class="text-xs text-primary font-medium">VIP Sofa Suite (฿500)</p>
+<p class="text-xs text-primary font-medium">VIP Sofa Suite (<span data-price-for="Sofa Pair">฿500</span>)</p>
 </div>
 <!-- Premium Seats (Middle Tier) -->
 <div class="flex flex-col gap-3 w-full items-center mb-4">
@@ -184,7 +198,7 @@
 </div>
 <span class="w-6 text-slate-400 font-bold flex items-center justify-center">B</span>
 </div>
-<p class="text-xs text-purple-700 font-medium">Premium Seat (฿350)</p>
+<p class="text-xs text-purple-700 font-medium">Premium Seat (<span data-price-for="Premium">฿350</span>)</p>
 </div>
 <!-- Regular Seats (Bottom Tier) -->
 <div class="flex flex-col gap-2 w-full items-center">
@@ -234,7 +248,7 @@
 </div>
 <span class="w-6 text-slate-400 font-bold flex items-center justify-center">D</span>
 </div>
-<p class="text-xs text-slate-500 font-medium mt-2">Regular Seat (฿240)</p>
+<p class="text-xs text-slate-500 font-medium mt-2">Regular Seat (<span data-price-for="Regular">฿240</span>)</p>
 </div>
 </div>
 </div>
@@ -326,65 +340,27 @@
 </div>
 </div>
 </main>
+<div class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-4 pt-3" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));" id="mobile-seat-bar">
+<div class="max-w-xl mx-auto flex items-center gap-3">
+<div class="min-w-0 flex-1">
+<p class="text-xs text-slate-500 truncate" id="mobile-seat-list">ยังไม่ได้เลือกที่นั่ง</p>
+<p class="text-lg font-black text-slate-900 leading-tight" id="mobile-seat-total">฿0</p>
+</div>
+<button class="bg-primary text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-primary/30 disabled:opacity-50 disabled:shadow-none flex items-center gap-1" disabled id="mobile-pay-btn" type="button">ชำระเงิน<span class="material-symbols-outlined text-lg">arrow_forward</span></button>
+</div>
+</div>
 <script>
-    (() => {
+    (async () => {
         const DRAFT_KEY = 'cinema.checkoutDraft';
-        const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const API_BASE = window.location.protocol === 'file:' || (isLocalHost && window.location.port !== '4316')
-            ? 'http://localhost:4316'
-            : '';
+        const api = window.cinemaApi;
         const params = new URLSearchParams(window.location.search);
-        const sessionMovieId = sessionStorage.getItem('selectedMovieId');
-        const sessionTime = sessionStorage.getItem('selectedTime');
-        const sessionHall = sessionStorage.getItem('selectedHall');
-        const fallbackMovieId = typeof moviesDatabase !== 'undefined' ? Object.keys(moviesDatabase)[0] : null;
-        const movieId = sessionMovieId || params.get('movieId') || fallbackMovieId;
-        const movie = movieId && typeof moviesDatabase !== 'undefined' ? moviesDatabase[movieId] : null;
+        const showtimeId = params.get('showtimeId');
 
-        if (!movie) {
-            alert('ไม่พบข้อมูลหนังที่เลือก กรุณาเลือกใหม่อีกครั้ง');
+        if (!showtimeId) {
+            alert('กรุณาเลือกรอบฉายก่อน');
             window.location.href = 'movies.html';
             return;
         }
-
-        function findShowtimeDetails(targetMovie, time, hall) {
-            if (!targetMovie || !targetMovie.showtimes) return null;
-            for (const cinema of targetMovie.showtimes) {
-                for (const system of cinema.systems) {
-                    for (const slot of system.times) {
-                        if (slot.time === time && slot.hall === hall) {
-                            return {
-                                cinema: cinema.cinema,
-                                format: system.format,
-                                type: system.type,
-                                time: slot.time,
-                                hall: slot.hall
-                            };
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        function fallbackPoster(targetMovie) {
-            if (!targetMovie) return '';
-            return targetMovie.backdropImage || targetMovie.trailerImage || `https://picsum.photos/seed/${encodeURIComponent(targetMovie.id || 'movie')}/500/750`;
-        }
-
-        const fallbackCinema = movie.showtimes[0];
-        const fallbackSystem = fallbackCinema.systems[0];
-        const fallbackTime = fallbackSystem.times[0];
-        const showtimeDetails = findShowtimeDetails(movie, sessionTime, sessionHall) || {
-            cinema: fallbackCinema.cinema,
-            format: fallbackSystem.format,
-            type: fallbackSystem.type,
-            time: fallbackTime.time,
-            hall: fallbackTime.hall
-        };
-
-        const showtimeIdParam = params.get('showtimeId');
-        const showtimeId = showtimeIdParam || `st-${movieId}-${showtimeDetails.time.replace(':', '')}-${showtimeDetails.hall.toLowerCase().replace(/\s+/g, '-')}`;
 
         const seatMovieInfo = document.getElementById('seat-movie-info');
         const sidebarPoster = document.getElementById('sidebar-poster');
@@ -394,33 +370,54 @@
         const sidebarDate = document.getElementById('sidebar-date');
         const sidebarTime = document.getElementById('sidebar-time');
         const sidebarSound = document.getElementById('sidebar-sound');
-
-        if (seatMovieInfo) {
-            seatMovieInfo.textContent = `${movie.titleThai} | ${showtimeDetails.cinema} | ${showtimeDetails.hall} (${showtimeDetails.format}) | ${showtimeDetails.time} น.`;
-        }
-        if (sidebarPoster) {
-            sidebarPoster.src = fallbackPoster(movie);
-            sidebarPoster.alt = `Poster for ${movie.titleThai}`;
-            if (window.cinemaMovieImages?.getRealMoviePoster) {
-                window.cinemaMovieImages.getRealMoviePoster(movie).then((posterUrl) => {
-                    if (posterUrl) {
-                        sidebarPoster.src = posterUrl;
-                    }
-                }).catch(() => {});
-            }
-        }
-        if (sidebarTitle) sidebarTitle.textContent = movie.titleThai;
-        if (sidebarCinema) sidebarCinema.textContent = showtimeDetails.cinema;
-        if (sidebarHall) sidebarHall.textContent = `${showtimeDetails.hall} (${showtimeDetails.format})`;
-        if (sidebarDate) sidebarDate.textContent = 'วันนี้';
-        if (sidebarTime) sidebarTime.textContent = `${showtimeDetails.time} • ${movie.duration}`;
-        if (sidebarSound) sidebarSound.textContent = showtimeDetails.type || 'Soundtrack';
-
         const seatInputs = Array.from(document.querySelectorAll('input.seat-input'));
         const listEl = document.getElementById('selected-seats-list');
         const totalEl = document.getElementById('selected-total-price');
         const clearBtn = document.getElementById('clear-selected-btn');
         const payBtn = document.getElementById('go-payment-btn');
+
+        let showtime;
+        try {
+            showtime = await api.request(`/api/showtimes/${encodeURIComponent(showtimeId)}`);
+        } catch (error) {
+            alert(error.status === 404 ? 'ไม่พบรอบฉายนี้ กรุณาเลือกใหม่' : error.message);
+            window.location.href = 'movies.html';
+            return;
+        }
+
+        const movie = showtime.movie || {};
+        const title = movie.titleThai || movie.titleEng || movie.id;
+        const dateText = api.formatThaiDate(showtime.date, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        if (seatMovieInfo) {
+            seatMovieInfo.textContent = `${title} | ${showtime.cinema} | ${showtime.hall} (${showtime.format}) | ${api.formatThaiDate(showtime.date)} ${showtime.startTime} น.`;
+        }
+        if (sidebarPoster) {
+            sidebarPoster.src = movie.posterImage || movie.backdropImage || movie.trailerImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id || 'movie')}/500/750`;
+            sidebarPoster.alt = `Poster for ${title}`;
+            if (!movie.posterImage && window.cinemaMovieImages?.getRealMoviePoster) {
+                window.cinemaMovieImages.getRealMoviePoster(movie).then((posterUrl) => {
+                    if (posterUrl) sidebarPoster.src = posterUrl;
+                }).catch(() => {});
+            }
+        }
+        if (sidebarTitle) sidebarTitle.textContent = title;
+        if (sidebarCinema) sidebarCinema.textContent = showtime.cinema;
+        if (sidebarHall) sidebarHall.textContent = `${showtime.hall} (${showtime.format})`;
+        if (sidebarDate) sidebarDate.textContent = dateText;
+        if (sidebarTime) sidebarTime.textContent = `${showtime.startTime}${showtime.endTime ? ` - ${showtime.endTime}` : ''} • ${movie.duration || ''}`;
+        if (sidebarSound) sidebarSound.textContent = showtime.type || 'Soundtrack';
+
+        // Prices come from the admin pricing settings.
+        const seatPrices = showtime.pricing?.seatPrices || {};
+        seatInputs.forEach((input) => {
+            const price = seatPrices[input.dataset.type];
+            if (Number.isFinite(Number(price))) input.dataset.price = String(price);
+        });
+        document.querySelectorAll('[data-price-for]').forEach((el) => {
+            const price = seatPrices[el.dataset.priceFor];
+            if (Number.isFinite(Number(price))) el.textContent = `฿${Number(price).toLocaleString('th-TH')}`;
+        });
 
         function formatMoney(value) {
             return `฿${Number(value).toLocaleString('th-TH')}`;
@@ -448,43 +445,59 @@
             }
 
             totalEl.textContent = formatMoney(subtotal);
-            payBtn.disabled = selectedInputs.length === 0;
-            payBtn.classList.toggle('opacity-50', selectedInputs.length === 0);
-            payBtn.classList.toggle('cursor-not-allowed', selectedInputs.length === 0);
+            const disabled = selectedInputs.length === 0 || !showtime.bookable;
+            document.getElementById('mobile-seat-total').textContent = formatMoney(subtotal);
+            document.getElementById('mobile-seat-list').textContent = selectedInputs.length
+                ? `${selectedInputs.length} ที่นั่ง: ${selectedInputs.map((input) => input.value).join(', ')}`
+                : 'แตะที่นั่งเพื่อเลือก';
+            document.getElementById('mobile-pay-btn').disabled = disabled;
+            payBtn.disabled = disabled;
+            payBtn.classList.toggle('opacity-50', disabled);
+            payBtn.classList.toggle('cursor-not-allowed', disabled);
         }
 
-        async function markUnavailableSeats() {
-            try {
-                const response = await fetch(`${API_BASE}/api/seats/${encodeURIComponent(showtimeId)}`);
-                if (!response.ok) return;
-                const data = await response.json();
-                const blocked = new Set([...(data.sold || []), ...(data.booked || [])]);
+        function setSeatBlocked(input, blocked, reason = '') {
+            const label = document.querySelector(`label[for="${input.id}"]`);
+            if (label && !label.dataset.originalClass) label.dataset.originalClass = label.className;
+            if (blocked) {
+                input.checked = false;
+                input.disabled = true;
+                if (label) {
+                    label.className = `${label.dataset.originalClass} seat-label-unavailable`;
+                    label.classList.remove('hover:border-primary', 'cursor-pointer', 'bg-white', 'bg-neutral-tint', 'text-primary', 'text-purple-900', 'text-slate-600');
+                    label.title = reason;
+                }
+            } else if (input.disabled) {
+                input.disabled = false;
+                if (label) {
+                    label.className = label.dataset.originalClass;
+                    label.title = '';
+                }
+            }
+        }
 
-                seatInputs.forEach((input) => {
-                    if (!blocked.has(input.value)) return;
-                    input.checked = false;
-                    input.disabled = true;
-                    const label = document.querySelector(`label[for="${input.id}"]`);
-                    if (label) {
-                        label.classList.remove(
-                            'hover:border-primary',
-                            'cursor-pointer',
-                            'bg-white',
-                            'bg-neutral-tint',
-                            'text-primary',
-                            'text-purple-900',
-                            'text-slate-600'
-                        );
-                        label.classList.add('seat-label-unavailable');
-                    }
-                });
+        function applySeatState(seats) {
+            const booked = new Set(seats?.booked || []);
+            const held = new Set(seats?.held || []);
+            seatInputs.forEach((input) => {
+                if (!showtime.bookable) return setSeatBlocked(input, true, 'รอบนี้ปิดการจองแล้ว');
+                if (booked.has(input.value)) return setSeatBlocked(input, true, 'ที่นั่งนี้ถูกจองแล้ว');
+                if (held.has(input.value)) return setSeatBlocked(input, true, 'มีผู้อื่นกำลังชำระเงินที่นั่งนี้');
+                return setSeatBlocked(input, false);
+            });
+            renderSummary();
+        }
+
+        async function refreshSeats() {
+            try {
+                const latest = await api.request(`/api/showtimes/${encodeURIComponent(showtimeId)}`);
+                showtime.bookable = latest.bookable;
+                applySeatState(latest.seats);
             } catch (_error) {
             }
         }
 
-        seatInputs.forEach((input) => {
-            input.addEventListener('change', renderSummary);
-        });
+        seatInputs.forEach((input) => input.addEventListener('change', renderSummary));
 
         clearBtn.addEventListener('click', () => {
             seatInputs.forEach((input) => {
@@ -496,23 +509,32 @@
         payBtn.addEventListener('click', () => {
             const seats = selectedSeats();
             if (seats.length === 0) return;
-
-            localStorage.setItem(DRAFT_KEY, JSON.stringify({
-                movieId,
-                showtimeId,
-                cinema: showtimeDetails.cinema,
-                hall: showtimeDetails.hall,
-                time: showtimeDetails.time,
-                format: showtimeDetails.format,
-                promoCode: '',
-                usePoints: false,
-                seats
-            }));
-
-            window.location.href = `checkout.html?showtimeId=${encodeURIComponent(showtimeId)}`;
+            window.authModule.requireLogin(async () => {
+                payBtn.disabled = true;
+                try {
+                    const booking = await api.request('/api/bookings/hold', {
+                        method: 'POST',
+                        body: { showtimeId, seats }
+                    });
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify({ bookingId: booking.bookingId, showtimeId }));
+                    window.location.href = `checkout.html?bookingId=${encodeURIComponent(booking.bookingId)}`;
+                } catch (error) {
+                    alert(error.message || 'จองที่นั่งไม่สำเร็จ');
+                    await refreshSeats();
+                } finally {
+                    payBtn.disabled = false;
+                    renderSummary();
+                }
+            });
         });
 
-        markUnavailableSeats().finally(renderSummary);
+        document.getElementById('mobile-pay-btn').addEventListener('click', () => payBtn.click());
+
+        if (!showtime.bookable) {
+            alert('รอบฉายนี้ปิดการจองแล้ว กรุณาเลือกรอบอื่น');
+        }
+        applySeatState(showtime.seats);
+        setInterval(refreshSeats, 30000);
     })();
 </script>
 
@@ -598,20 +620,9 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
+    import { app, firebaseConfig } from './firebase-init.js';
     import { initializeAuthUI } from './auth.js';
 
-    const firebaseConfig = {
-        apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-        authDomain: 'frame-4e170.firebaseapp.com',
-        projectId: 'frame-4e170',
-        storageBucket: 'frame-4e170.firebasestorage.app',
-        messagingSenderId: '585102075629',
-        appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-        measurementId: 'G-0TCR1Y4LP2'
-    };
-
-    const app = initializeApp(firebaseConfig);
     initializeAuthUI(app, firebaseConfig);
 </script>
 </body></html>

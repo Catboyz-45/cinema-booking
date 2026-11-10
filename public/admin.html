@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="robots" content="noindex"/>
+<title>Cinema Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script src="cinema-api.js"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: { primary: '#e9508c', 'primary-dark': '#d63e7a' },
+                fontFamily: { body: ['Inter', 'Noto Sans Thai', 'sans-serif'] }
+            }
+        }
+    };
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+    body { font-family: 'Inter', 'Noto Sans Thai', sans-serif; }
+    .nav-btn.active { background: rgba(233, 80, 140, 0.18); color: #fff; }
+    .nav-btn.active .material-symbols-outlined { color: #e9508c; }
+    .field { display: block; width: 100%; border-radius: 0.5rem; border: 1px solid #cbd5e1; padding: 0.5rem 0.75rem; font-size: 0.875rem; background: #fff; }
+    .field:focus { outline: none; border-color: #e9508c; box-shadow: 0 0 0 2px rgba(233, 80, 140, 0.2); }
+    .label { display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; border-radius: 0.5rem; padding: 0.5rem 0.875rem; font-size: 0.875rem; font-weight: 700; transition: background-color .15s, color .15s; white-space: nowrap; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: #e9508c; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #d63e7a; }
+    .btn-dark { background: #0f172a; color: #fff; }
+    .btn-dark:hover:not(:disabled) { background: #334155; }
+    .btn-ghost { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-ghost:hover:not(:disabled) { background: #f1f5f9; }
+    .btn-danger { background: #fff; color: #be123c; border: 1px solid #fecdd3; }
+    .btn-danger:hover:not(:disabled) { background: #fff1f2; }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; }
+    .table { width: 100%; font-size: 0.875rem; border-collapse: collapse; }
+    .table th { text-align: left; font-size: 0.75rem; font-weight: 700; color: #64748b; background: #f8fafc; padding: 0.625rem 0.75rem; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+    .table td { padding: 0.625rem 0.75rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .table tr:last-child td { border-bottom: 0; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    /* action row of modal forms: always visible at the bottom while the form scrolls */
+    .modal-actions { position: sticky; bottom: 0; background: #fff; margin: 1rem -1.25rem 0; padding: 0.75rem 1.25rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 0.5rem; z-index: 1; }
+    .form-section { border: 1px solid #e2e8f0; border-radius: 0.875rem; padding: 1rem; }
+    .form-section > h4 { font-size: 0.8rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.375rem; }
+    .hint { font-size: 0.72rem; color: #64748b; margin-top: 0.25rem; }
+    .field-error { font-size: 0.72rem; color: #be123c; margin-top: 0.25rem; }
+    .field.invalid { border-color: #e11d48; box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.15); }
+    .chip { display: inline-flex; align-items: center; gap: 0.25rem; border: 1px solid #cbd5e1; border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600; color: #475569; background: #fff; cursor: pointer; }
+    .chip[aria-pressed="true"] { background: #e9508c; border-color: #e9508c; color: #fff; }
+    .segmented { display: inline-flex; background: #f1f5f9; border-radius: 0.6rem; padding: 0.2rem; gap: 0.2rem; flex-wrap: wrap; }
+    .segmented button { border-radius: 0.45rem; padding: 0.35rem 0.8rem; font-size: 0.8rem; font-weight: 700; color: #475569; }
+    .segmented button[aria-pressed="true"] { background: #fff; color: #0f172a; box-shadow: 0 1px 2px rgba(15, 23, 42, .12); }
+    .step-num { display: inline-flex; width: 1.3rem; height: 1.3rem; border-radius: 999px; background: #e9508c; color: #fff; font-size: 0.7rem; align-items: center; justify-content: center; }
+    .label.mt-3 { margin-top: 0.75rem; }
+    .chip.warn { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+    .chip .x { font-size: 1rem; line-height: 1; opacity: .7; }
+    .switch { position: relative; width: 2.6rem; height: 1.5rem; border-radius: 999px; background: #cbd5e1; transition: background .15s; flex-shrink: 0; }
+    .switch::after { content: ''; position: absolute; top: 0.2rem; left: 0.2rem; width: 1.1rem; height: 1.1rem; border-radius: 999px; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+    .switch[aria-checked="true"] { background: #10b981; }
+    .switch[aria-checked="true"]::after { transform: translateX(1.1rem); }
+    .img-preview { background: #f1f5f9 center / cover no-repeat; border-radius: 0.6rem; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.7rem; text-align: center; overflow: hidden; }
+    .seat { width: 2.75rem; height: 2.25rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; }
+    .seat-free { background: #f1f5f9; color: #64748b; }
+    .seat-held { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    .seat-booked { background: #e9508c; color: #fff; }
+    .seat-used { background: #334155; color: #fff; }
+    @media print {
+        .no-print, .print-hide { display: none !important; }
+        body, main { background: #fff !important; padding: 0 !important; }
+        .card { border: 0; }
+    }
+</style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen">
+
+<!-- Gate: login / no permission -->
+<div id="gate" class="min-h-screen flex items-center justify-center p-4">
+    <div class="card w-full max-w-sm p-6 shadow-sm">
+        <div class="flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+            <h1 class="text-xl font-black">ระบบหลังบ้าน Cinema</h1>
+        </div>
+        <p id="gate-message" class="text-sm text-slate-500 mb-5">กำลังตรวจสอบสิทธิ์...</p>
+        <form id="gate-login" class="space-y-3 hidden">
+            <div>
+                <label class="label" for="gate-email">อีเมลผู้ดูแลระบบ</label>
+                <input class="field" id="gate-email" type="email" autocomplete="username" required/>
+            </div>
+            <div>
+                <label class="label" for="gate-password">รหัสผ่าน</label>
+                <input class="field" id="gate-password" type="password" autocomplete="current-password" required/>
+            </div>
+            <button class="btn btn-primary w-full" type="submit">เข้าสู่ระบบ</button>
+            <p id="gate-error" class="text-sm text-rose-600"></p>
+        </form>
+        <div id="gate-denied" class="hidden space-y-3">
+            <button class="btn btn-ghost w-full" id="gate-logout" type="button">ออกจากระบบ</button>
+        </div>
+        <a class="block text-center text-sm text-slate-500 hover:text-primary mt-5" href="index.html">← กลับหน้าเว็บไซต์</a>
+    </div>
+</div>
+
+<!-- App -->
+<div id="app" class="hidden min-h-screen md:flex">
+    <aside class="no-print bg-slate-900 text-slate-300 md:w-60 md:min-h-screen md:sticky md:top-0 md:h-screen flex md:flex-col">
+        <div class="hidden md:flex items-center gap-2 px-5 py-5 text-white">
+            <span class="material-symbols-outlined text-primary">movie</span>
+            <span class="font-black text-lg">Cinema Admin</span>
+        </div>
+        <nav id="nav" class="flex md:flex-col gap-1 px-2 py-2 md:py-0 overflow-x-auto md:overflow-visible flex-1">
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="dashboard"><span class="material-symbols-outlined text-xl">dashboard</span>ภาพรวม</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="movies"><span class="material-symbols-outlined text-xl">movie</span>ภาพยนตร์</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="showtimes"><span class="material-symbols-outlined text-xl">calendar_month</span>รอบฉาย</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="bookings"><span class="material-symbols-outlined text-xl">qr_code_scanner</span>การจอง / เช็คอิน</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="reports"><span class="material-symbols-outlined text-xl">bar_chart</span>รายงาน</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="pricing"><span class="material-symbols-outlined text-xl">payments</span>ราคาตั๋ว</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="promotions"><span class="material-symbols-outlined text-xl">sell</span>โปรโมชั่น</button>
+            <button class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" data-tab="users"><span class="material-symbols-outlined text-xl">group</span>ผู้ใช้</button>
+            <button class="md:hidden flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/10 whitespace-nowrap" id="logout-btn-mobile" type="button"><span class="material-symbols-outlined text-xl">logout</span>ออกจากระบบ</button>
+        </nav>
+        <div class="hidden md:block px-5 py-4 border-t border-white/10 text-xs">
+            <p class="text-slate-400">เข้าสู่ระบบเป็น</p>
+            <p class="font-semibold text-white truncate" id="admin-email"></p>
+            <div class="flex gap-3 mt-3">
+                <a class="hover:text-white" href="index.html">หน้าเว็บไซต์</a>
+                <button class="hover:text-white" id="logout-btn" type="button">ออกจากระบบ</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 min-w-0 p-4 md:p-8">
+
+        <!-- Dashboard -->
+        <section data-panel="dashboard" class="hidden space-y-6">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-black">ภาพรวม</h2>
+                    <p class="text-sm text-slate-500" id="dash-date"></p>
+                </div>
+                <button class="btn btn-ghost no-print" data-reload="dashboard" type="button"><span class="material-symbols-outlined text-base">refresh</span>รีเฟรช</button>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3" id="dash-cards"></div>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <div class="card p-5 lg:col-span-2">
+                    <h3 class="font-bold mb-4">รายได้ 7 วันล่าสุด</h3>
+                    <div id="dash-chart" class="h-48 flex items-end gap-2"></div>
+                </div>
+                <div class="card p-5">
+                    <h3 class="font-bold mb-3">ภาพยนตร์ขายดี (7 วัน)</h3>
+                    <div id="dash-top"></div>
+                </div>
+            </div>
+            <div class="card overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="font-bold">รอบฉายวันนี้</h3>
+                    <a class="text-sm font-semibold text-primary" href="#showtimes">จัดการรอบฉาย →</a>
+                </div>
+                <div class="overflow-x-auto" id="dash-showtimes"></div>
+            </div>
+        </section>
+
+        <!-- Movies -->
+        <section data-panel="movies" class="hidden space-y-6">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-black">ภาพยนตร์</h2>
+                    <p class="text-sm text-slate-500">เพิ่ม แก้ไข หรือลบข้อมูลภาพยนตร์ (เรื่องที่มีประวัติการจองจะถูกเก็บถาวรแทนการลบ)</p>
+                </div>
+                <div class="flex gap-2">
+                    <input class="field w-48" id="movie-search" placeholder="ค้นหาชื่อเรื่อง" type="search"/>
+                    <button class="btn btn-primary" id="movie-add-btn" type="button"><span class="material-symbols-outlined text-base">add</span>เพิ่มภาพยนตร์</button>
+                </div>
+            </div>
+            <div class="card overflow-x-auto" id="movies-table"></div>
+        </section>
+
+        <!-- Showtimes -->
+        <section data-panel="showtimes" class="hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-black">รอบฉาย</h2>
+                <p class="text-sm text-slate-500">สร้างรอบฉายหลายวันพร้อมกันได้ ระบบจะข้ามรอบที่เวลาชนกันในโรงเดียวกัน (รวมเวลาทำความสะอาด 15 นาที)</p>
+            </div>
+            <form class="card p-5 space-y-4" id="showtime-form" novalidate>
+                <h3 class="font-bold text-lg">สร้างรอบฉายใหม่</h3>
+                <div class="grid lg:grid-cols-2 gap-4">
+                    <section class="form-section">
+                        <h4><span class="step-num">1</span>ภาพยนตร์</h4>
+                        <select class="field" id="st-movie" aria-label="ภาพยนตร์"></select>
+                        <p class="hint" id="st-movie-info"></p>
+                    </section>
+                    <section class="form-section">
+                        <h4><span class="step-num">2</span>โรงภาพยนตร์</h4>
+                        <label class="label" for="st-cinema-select">สาขา</label>
+                        <select class="field" id="st-cinema-select"></select>
+                        <input class="field mt-2 hidden" id="st-cinema-new" placeholder="ชื่อสาขาใหม่ เช่น Cinema Bangna" aria-label="ชื่อสาขาใหม่"/>
+                        <span class="label mt-3">โรงย่อย</span>
+                        <div class="flex flex-wrap gap-2" id="st-hall-chips" role="group" aria-label="โรงย่อย"></div>
+                        <div class="flex gap-2 mt-2">
+                            <input class="field max-w-[12rem]" id="st-hall-new" placeholder="ชื่อโรงย่อยใหม่" aria-label="เพิ่มโรงย่อย"/>
+                            <button class="btn btn-ghost btn-sm" id="st-hall-add" type="button"><span class="material-symbols-outlined text-base">add</span>เพิ่ม</button>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <h4><span class="step-num">3</span>ระบบฉายและเสียง</h4>
+                        <span class="label">ระบบฉาย</span>
+                        <div class="segmented" id="st-format" role="group" aria-label="ระบบฉาย"></div>
+                        <span class="label mt-3">เสียง / ซับไตเติล</span>
+                        <div class="flex flex-wrap gap-2" id="st-type" role="group" aria-label="เสียง / ซับไตเติล"></div>
+                        <input class="field mt-2" id="st-type-other" placeholder="หรือพิมพ์เอง" aria-label="เสียง / ซับไตเติล แบบอื่น"/>
+                    </section>
+                    <section class="form-section">
+                        <h4><span class="step-num">4</span>วันที่ฉาย</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="label" for="st-from">ตั้งแต่</label><input class="field" id="st-from" type="date"/></div>
+                            <div><label class="label" for="st-to">ถึง</label><input class="field" id="st-to" type="date"/></div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-3" id="st-range-quick">
+                            <button class="chip" data-days="1" type="button">วันนี้</button>
+                            <button class="chip" data-days="1" data-offset="1" type="button">พรุ่งนี้</button>
+                            <button class="chip" data-days="7" type="button">7 วัน</button>
+                            <button class="chip" data-days="14" type="button">14 วัน</button>
+                        </div>
+                    </section>
+                </div>
+                <section class="form-section">
+                    <h4><span class="step-num">5</span>เวลาเริ่มฉาย <span class="font-normal text-slate-500">(กดเลือกได้หลายเวลา)</span></h4>
+                    <div class="flex flex-wrap gap-2" id="st-time-suggest"></div>
+                    <div class="flex gap-2 mt-3">
+                        <input class="field w-36" id="st-time-new" type="time" aria-label="เวลาอื่น"/>
+                        <button class="btn btn-ghost btn-sm" id="st-time-add" type="button"><span class="material-symbols-outlined text-base">add</span>เพิ่มเวลาอื่น</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3" id="st-time-selected"></div>
+                    <div class="mt-3 rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm hidden" id="st-existing"></div>
+                </section>
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 border border-slate-200 p-4">
+                    <div>
+                        <p class="font-bold" id="st-summary">ยังไม่ได้เลือกเวลา</p>
+                        <p class="hint" id="st-summary-detail"></p>
+                    </div>
+                    <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined text-base">add</span>สร้างรอบฉาย</button>
+                </div>
+                <div class="text-sm" id="showtime-result"></div>
+                <datalist id="cinema-options"></datalist>
+            </form>
+            <div class="card">
+                <div class="p-4 flex flex-wrap items-end gap-3 border-b border-slate-100">
+                    <div><label class="label" for="st-filter-from">จาก</label><input class="field" id="st-filter-from" type="date"/></div>
+                    <div><label class="label" for="st-filter-to">ถึง</label><input class="field" id="st-filter-to" type="date"/></div>
+                    <div class="min-w-[12rem]"><label class="label" for="st-filter-movie">ภาพยนตร์</label><select class="field" id="st-filter-movie"></select></div>
+                    <button class="btn btn-dark" id="st-filter-btn" type="button">ค้นหา</button>
+                </div>
+                <div class="overflow-x-auto" id="showtimes-table"></div>
+            </div>
+        </section>
+
+        <!-- Bookings / check-in -->
+        <section data-panel="bookings" class="hidden space-y-6">
+            <h2 class="text-2xl font-black">การจอง / เช็คอิน</h2>
+            <div class="card p-5">
+                <h3 class="font-bold mb-3">เช็คอินหน้าโรง</h3>
+                <form class="flex flex-wrap gap-2" id="checkin-form">
+                    <input class="field flex-1 min-w-[14rem]" id="checkin-code" placeholder="สแกน QR หรือกรอก Booking ID เช่น BK-AB12CD34" autocomplete="off"/>
+                    <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined text-base">how_to_reg</span>เช็คอิน</button>
+                    <button class="btn btn-ghost" id="scan-btn" type="button"><span class="material-symbols-outlined text-base">photo_camera</span>สแกนด้วยกล้อง</button>
+                </form>
+                <div id="qr-reader" class="mt-4 max-w-sm hidden"></div>
+                <div id="checkin-result" class="mt-4"></div>
+            </div>
+            <div class="card">
+                <form class="p-4 flex flex-wrap items-end gap-3 border-b border-slate-100" id="booking-search">
+                    <div class="flex-1 min-w-[14rem]"><label class="label" for="bk-q">Booking ID หรืออีเมลลูกค้า</label><input class="field" id="bk-q" type="search"/></div>
+                    <div><label class="label" for="bk-date">วันที่ฉาย</label><input class="field" id="bk-date" type="date"/></div>
+                    <div>
+                        <label class="label" for="bk-status">สถานะ</label>
+                        <select class="field" id="bk-status">
+                            <option value="">ทั้งหมด</option><option value="paid">ชำระแล้ว</option><option value="used">ใช้แล้ว</option>
+                            <option value="pending">รอชำระเงิน</option><option value="cancelled">ยกเลิก</option><option value="expired">หมดเวลา</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-dark" type="submit">ค้นหา</button>
+                </form>
+                <div class="overflow-x-auto" id="bookings-table"></div>
+            </div>
+        </section>
+
+        <!-- Reports -->
+        <section data-panel="reports" class="hidden space-y-6">
+            <h2 class="text-2xl font-black no-print">รายงาน</h2>
+            <div class="card p-5 report-card" id="report-sales">
+                <div class="flex flex-wrap items-end gap-3 mb-4">
+                    <h3 class="font-bold text-lg mr-auto">รายงานยอดขายตั๋ว</h3>
+                    <div class="no-print"><label class="label" for="rs-from">จาก</label><input class="field" id="rs-from" type="date"/></div>
+                    <div class="no-print"><label class="label" for="rs-to">ถึง</label><input class="field" id="rs-to" type="date"/></div>
+                    <div class="no-print">
+                        <label class="label" for="rs-group">แสดงผล</label>
+                        <select class="field" id="rs-group"><option value="day">รายวัน</option><option value="month">รายเดือน</option></select>
+                    </div>
+                    <button class="btn btn-dark no-print" data-report="sales" type="button">แสดงรายงาน</button>
+                    <button class="btn btn-ghost no-print" data-csv="sales" type="button"><span class="material-symbols-outlined text-base">download</span>Excel (CSV)</button>
+                    <button class="btn btn-ghost no-print" data-print="report-sales" type="button"><span class="material-symbols-outlined text-base">print</span>PDF</button>
+                </div>
+                <p class="text-sm text-slate-500 mb-3" id="rs-caption"></p>
+                <div class="overflow-x-auto" id="rs-table"></div>
+            </div>
+            <div class="card p-5 report-card" id="report-movies">
+                <div class="flex flex-wrap items-end gap-3 mb-4">
+                    <h3 class="font-bold text-lg mr-auto">รายงานจำนวนผู้เข้าชมแยกตามภาพยนตร์</h3>
+                    <div class="no-print"><label class="label" for="rm-from">จาก</label><input class="field" id="rm-from" type="date"/></div>
+                    <div class="no-print"><label class="label" for="rm-to">ถึง</label><input class="field" id="rm-to" type="date"/></div>
+                    <button class="btn btn-dark no-print" data-report="movies" type="button">แสดงรายงาน</button>
+                    <button class="btn btn-ghost no-print" data-csv="movies" type="button"><span class="material-symbols-outlined text-base">download</span>Excel (CSV)</button>
+                    <button class="btn btn-ghost no-print" data-print="report-movies" type="button"><span class="material-symbols-outlined text-base">print</span>PDF</button>
+                </div>
+                <p class="text-sm text-slate-500 mb-3" id="rm-caption"></p>
+                <div class="overflow-x-auto" id="rm-table"></div>
+            </div>
+            <div class="card p-5 report-card" id="report-showtimes">
+                <div class="flex flex-wrap items-end gap-3 mb-4">
+                    <h3 class="font-bold text-lg mr-auto">รายงานที่นั่งที่ถูกจองในแต่ละรอบฉาย</h3>
+                    <div class="no-print"><label class="label" for="rt-date">วันที่ฉาย</label><input class="field" id="rt-date" type="date"/></div>
+                    <button class="btn btn-dark no-print" data-report="showtimes" type="button">แสดงรายงาน</button>
+                    <button class="btn btn-ghost no-print" data-csv="showtimes" type="button"><span class="material-symbols-outlined text-base">download</span>Excel (CSV)</button>
+                    <button class="btn btn-ghost no-print" data-print="report-showtimes" type="button"><span class="material-symbols-outlined text-base">print</span>PDF</button>
+                </div>
+                <p class="text-sm text-slate-500 mb-3" id="rt-caption"></p>
+                <div class="overflow-x-auto" id="rt-table"></div>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section data-panel="pricing" class="hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-black">ราคาตั๋ว</h2>
+                <p class="text-sm text-slate-500">ราคาใหม่มีผลกับการจองที่ชำระเงินหลังจากบันทึก</p>
+            </div>
+            <form class="card p-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl" id="pricing-form">
+                <h3 class="font-bold sm:col-span-2 lg:col-span-4">ราคาที่นั่ง (บาท)</h3>
+                <div><label class="label" for="pr-sofa">Sofa Pair (แถว A)</label><input class="field" id="pr-sofa" min="0" type="number" required/></div>
+                <div><label class="label" for="pr-premium">Premium (แถว B)</label><input class="field" id="pr-premium" min="0" type="number" required/></div>
+                <div><label class="label" for="pr-regular">Regular (แถว C-D)</label><input class="field" id="pr-regular" min="0" type="number" required/></div>
+                <div><label class="label" for="pr-fee">ค่าบริการต่อที่นั่ง</label><input class="field" id="pr-fee" min="0" type="number" required/></div>
+                <h3 class="font-bold sm:col-span-2 lg:col-span-4 mt-2">การจองและคะแนนสะสม</h3>
+                <div><label class="label" for="pr-hold">เวลาล็อกที่นั่งรอชำระ (นาที)</label><input class="field" id="pr-hold" max="60" min="3" type="number" required/></div>
+                <div><label class="label" for="pr-bonus">คะแนนต้อนรับสมาชิกใหม่</label><input class="field" id="pr-bonus" min="0" type="number" required/></div>
+                <div><label class="label" for="pr-earn">คะแนนที่ได้ต่อการจอง</label><input class="field" id="pr-earn" min="0" type="number" required/></div>
+                <div></div>
+                <div><label class="label" for="pr-req">ใช้คะแนนครั้งละ</label><input class="field" id="pr-req" min="0" type="number" required/></div>
+                <div><label class="label" for="pr-disc">เพื่อลด (บาท)</label><input class="field" id="pr-disc" min="0" type="number" required/></div>
+                <div class="sm:col-span-2 lg:col-span-4">
+                    <button class="btn btn-primary" type="submit"><span class="material-symbols-outlined text-base">save</span>บันทึกราคา</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Promotions -->
+        <section data-panel="promotions" class="hidden space-y-6">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 class="text-2xl font-black">โปรโมชั่น</h2>
+                    <p class="text-sm text-slate-500">ลูกค้าแต่ละคนใช้แต่ละโค้ดได้ 1 ครั้ง</p>
+                </div>
+                <button class="btn btn-primary" id="promo-add-btn" type="button"><span class="material-symbols-outlined text-base">add</span>เพิ่มโค้ด</button>
+            </div>
+            <div class="card overflow-x-auto" id="promotions-table"></div>
+        </section>
+
+        <!-- Users -->
+        <section data-panel="users" class="hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-black">ผู้ใช้</h2>
+                <p class="text-sm text-slate-500">กำหนดสิทธิ์ผู้ดูแลระบบให้พนักงาน</p>
+            </div>
+            <div class="card overflow-x-auto" id="users-table"></div>
+        </section>
+    </main>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="fixed inset-0 z-50 hidden bg-black/50 p-2 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="card max-w-3xl mx-auto h-full sm:h-auto sm:max-h-[calc(100vh-2rem)] sm:mt-4 shadow-2xl flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+            <h3 class="font-bold text-lg" id="modal-title"></h3>
+            <button class="text-slate-400 hover:text-slate-700" id="modal-close" type="button" aria-label="ปิด"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="px-5 pt-5 overflow-y-auto flex-1" id="modal-body"></div>
+    </div>
+</div>
+
+<div id="toast" class="no-print fixed bottom-4 right-4 z-[60] hidden max-w-sm rounded-xl px-4 py-3 text-sm font-semibold shadow-lg"></div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>

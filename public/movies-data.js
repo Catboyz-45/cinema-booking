@@ -12,7 +12,7 @@ const moviesDatabase = {
         ageLimit: '15+',
         backdropImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuASMj5eZTFJZJs9CywraW3SS7EjRRxBBEHqp-Y19NWauJrymZaNn1rXaEBcJQPTmnFDhF7-p6IIwNd7AQa6xtFWoImsrofyxVANdSPqev0LFMGsYGtKLktvAmYxrQAh7SAmvSUcuhxed8VZqLbtnuVBw9ocFdQcmk0jMeZlAJDbIk3YjSTlLfLNvQWmrF_OisbgJslncTjKUzc3oTfExAOGztOdWazgvwZYKGiLfTAsGiHOAPFMZ5QUH',
         trailerImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDyWgC4UyWziyzpvGycmmrFcXTSS5aq4jSUnwBdTIjLplvd3mUe3Fi0fnEEH7FPiW53M7IPURk4T5B1Pz8y3Hrb-HzQnIXXjPPPDH0O_OiPjIi3-MLddIU-KFHdQmU',
-        description: 'สลับปลิสิตจากการรายของแม่ ยักษ์ยดงคนอสำหมดสำหรับชีวิตส่วนของเรือศวนองเหยือจงไปสล่างไม่ลดสล่าง แม่',
+        description: 'ยักษ์ออกตามล่าวิญญาณร้ายที่พรากชีวิตน้องสาว เพื่อปกป้องครอบครัวจากเสียงกระซิบปริศนาที่ยังวนเวียนอยู่ในหมู่บ้าน',
         showtimes: [
             {
                 cinema: 'Paragon Cineplex',
@@ -169,7 +169,7 @@ const moviesDatabase = {
         ageLimit: '13+',
         backdropImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD7hunger0Games0backdrop00',
         trailerImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD7hunger0Games0trailer00',
-        description: 'เกมการต่อสู้ที่ดุร้ายที่สำหรับเด็กควายศีลเข่างเข่างด้านการต่อสู้เพื่อความอยู่รอดของตัวเอง',
+        description: 'เด็กสาวจากเขตที่ยากจนที่สุดอาสาเข้าร่วมเกมเอาชีวิตรอดแทนน้องสาว และต้องใช้ทั้งไหวพริบและความกล้าหาญเพื่อกลับบ้าน',
         showtimes: [
             {
                 cinema: 'Paragon Cineplex',
@@ -234,7 +234,7 @@ const moviesDatabase = {
         ageLimit: '18+',
         backdropImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5LDqEhChXP-vKH3QfaFy2-3NiwsDGow2GuUO3vq5mAbu9JUt7',
         trailerImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5LDq0Killers0Flower0Moon0',
-        description: 'ภาพยนตร์มาตรฐานที่บรรยายปัญหาความลึกของการหลอก และการลักษณ์พิษของตลาดไข่มุกในเวลาสงครามสมัยโจ้ย',
+        description: 'เมื่อพบน้ำมันบนผืนดินของชาวโอเซจในทศวรรษ 1920 การฆาตกรรมปริศนาก็เริ่มขึ้น และการสืบสวนได้เปิดโปงความโลภของผู้มีอำนาจ',
         showtimes: [
             {
                 cinema: 'Major Cineplex Sukhumvit',
@@ -284,7 +284,7 @@ const moviesDatabase = {
         ageLimit: 'G',
         backdropImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAERj7xQVsl0tyNLugPr8wpKU9VHDPlA6FU',
         trailerImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAERj7xQVsl0tyNLugPr8wpKU9VHDPlA6FU',
-        description: 'เอลฟ์สวนวิเศษภาพเรื่องน้อยน้อยเพลง และมิตรภาพหลังจากไผ่ทั่วนอกอความระบบ',
+        description: 'บรันช์และป๊อปปี้ออกเดินทางรวมวงพี่น้องอีกครั้ง เพื่อช่วยครอบครัวด้วยพลังของเสียงเพลงและมิตรภาพ',
         showtimes: [
             {
                 cinema: 'Icon Siam Cineplex',

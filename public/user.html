@@ -5,6 +5,8 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>User Profile - Cinema</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
   <script src="movies-data.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -101,26 +103,11 @@
   </main>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
+    import { auth } from './firebase-init.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js';
 
-    const firebaseConfig = {
-      apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-      authDomain: 'frame-4e170.firebaseapp.com',
-      projectId: 'frame-4e170',
-      storageBucket: 'frame-4e170.firebasestorage.app',
-      messagingSenderId: '585102075629',
-      appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-      measurementId: 'G-0TCR1Y4LP2'
-    };
-
-    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const API_BASE = window.location.protocol === 'file:' || (isLocalHost && window.location.port !== '4316')
-      ? 'http://localhost:4316'
-      : '';
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const api = window.cinemaApi;
+    const esc = api.escapeHtml;
 
     const profileName = document.getElementById('profile-name');
     const profileEmail = document.getElementById('profile-email');
@@ -258,13 +245,19 @@
       }
 
       const sorted = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
+      const upcoming = sorted
+        .filter((booking) => booking.status === 'paid' && (!booking.showtime?.date || booking.showtime.date >= today))
+        .sort((a, b) => `${a.showtime?.date}${a.showtime?.startTime}`.localeCompare(`${b.showtime?.date}${b.showtime?.startTime}`));
 
-      upcomingList.innerHTML = sorted.slice(0, 2).map((booking) => `
+      if (upcoming.length === 0) {
+        upcomingList.innerHTML = '<div class="bg-white rounded-xl p-5 border border-primary/10 text-slate-500">ไม่มีตั๋วที่กำลังจะถึง</div>';
+      } else upcomingList.innerHTML = upcoming.slice(0, 4).map((booking) => `
         <div class="bg-white rounded-xl p-5 border border-primary/10 flex gap-4">
           <img class="w-20 h-28 rounded-lg object-cover bg-slate-100 flex-shrink-0" src="${getPosterForBooking(booking)}" data-booking-movie-id="${findMovieRef(booking)?.id || ''}" alt="${booking.movie?.title || 'Movie'}" />
           <div class="min-w-0 flex-1">
-            <h3 class="font-bold text-lg truncate">${booking.movie?.title || '-'}</h3>
-            <p class="text-sm text-slate-500 mt-1">${booking.movie?.cinema || '-'} • ${booking.movie?.hall || '-'}</p>
+            <h3 class="font-bold text-lg truncate">${esc(booking.movie?.title || '-')}</h3>
+            <p class="text-sm text-slate-500 mt-1">${esc(booking.movie?.cinema || '-')} • ${esc(booking.movie?.hall || '-')}</p>
             <p class="text-sm text-slate-500">${formatDateLabel(booking.showtime)}</p>
             <p class="text-sm text-slate-600 mt-2">ที่นั่ง: ${Array.isArray(booking.seats) ? booking.seats.join(', ') : '-'}</p>
             <div class="mt-4 flex gap-2">
@@ -279,12 +272,25 @@
 
       historyTableBody.innerHTML = sorted.map((booking) => `
         <tr>
-          <td class="px-4 py-3 font-medium">${booking.movie?.title || '-'}</td>
+          <td class="px-4 py-3 font-medium">
+            <a class="hover:text-primary" href="${booking.status === 'pending' ? 'checkout' : 'booking-confirmation'}.html?bookingId=${encodeURIComponent(booking.bookingId)}">${esc(booking.movie?.title || '-')}</a>
+            <div class="mt-1">${api.statusBadge(booking.status)}</div>
+          </td>
           <td class="px-4 py-3 text-slate-600">${formatDateLabel(booking.showtime)}</td>
           <td class="px-4 py-3 text-slate-600">${Array.isArray(booking.seats) ? booking.seats.join(', ') : '-'}</td>
           <td class="px-4 py-3 font-semibold">${Number(booking.pricing?.total || 0).toLocaleString('th-TH')} บาท</td>
         </tr>
       `).join('');
+    }
+
+    function showAdminLink() {
+      if (document.getElementById('admin-link')) return;
+      const link = document.createElement('a');
+      link.id = 'admin-link';
+      link.href = 'admin.html';
+      link.className = 'inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-700 transition-colors';
+      link.innerHTML = '<span class="material-symbols-outlined text-base">admin_panel_settings</span>ระบบหลังบ้าน';
+      logoutBtn.insertAdjacentElement('beforebegin', link);
     }
 
     async function loadUserData(user) {
@@ -296,26 +302,20 @@
       profileEmail.textContent = email;
       userAvatar.textContent = (displayName || email).charAt(0).toUpperCase();
 
+      await api.catalog();
       try {
-        const userResponse = await fetch(`${API_BASE}/api/users/${encodeURIComponent(uid)}`);
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          const points = Number(userData.loyaltyPoints || 0);
-          profilePoints.textContent = points.toLocaleString('th-TH');
-          profileTier.textContent = tierByPoints(points);
-        } else {
-          profilePoints.textContent = '0';
-          profileTier.textContent = 'Member';
-        }
+        const userData = await api.request('/api/me');
+        const points = Number(userData.loyaltyPoints || 0);
+        profilePoints.textContent = points.toLocaleString('th-TH');
+        profileTier.textContent = userData.role === 'admin' ? 'ผู้ดูแลระบบ' : tierByPoints(points);
+        if (userData.role === 'admin') showAdminLink();
       } catch (_error) {
         profilePoints.textContent = '0';
         profileTier.textContent = 'Member';
       }
 
       try {
-        const bookingResponse = await fetch(`${API_BASE}/api/users/${encodeURIComponent(uid)}/bookings`);
-        const bookings = bookingResponse.ok ? await bookingResponse.json() : [];
-        renderBookings(bookings);
+        renderBookings(await api.request('/api/me/bookings'));
       } catch (_error) {
         renderBookings([]);
       }

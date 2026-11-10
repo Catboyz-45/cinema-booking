@@ -6,6 +6,7 @@ functions/node_modules/
 .env
 .env.*
 !.env.example
+!functions/.env.demo-cinema
 firebase-service-account.json
 *-service-account.json
 

@@ -3,10 +3,12 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title id="page-title">Movie Details - Major Cineplex</title>
+    <title id="page-title">ภาพยนตร์ - Cinema</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;family=Noto+Sans+Thai:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
     <script src="movies-data.js"></script>
     <script id="tailwind-config">
         tailwind.config = {
@@ -121,6 +123,7 @@
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                 <div class="border-b border-gray-100 bg-gray-50/50 p-6">
                     <h3 class="text-xl font-bold text-slate-900 mb-4">เลือกโรงภาพยนตร์และรอบฉาย</h3>
+                    <div id="date-tabs" class="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="เลือกวันที่"></div>
                 </div>
                 <div id="showtimes-container" class="p-6 space-y-8 bg-white min-h-[400px]">
                     <!-- Showtimes will be populated here -->
@@ -160,8 +163,9 @@
             const WATCHLIST_KEY = 'cinema.watchlistByUid';
 
             // Get movie ID from URL parameter
+            await window.cinemaApi.catalog();
             const params = new URLSearchParams(window.location.search);
-            const movieId = params.get('id') || 'death-whisperer-2';
+            const movieId = params.get('id') || Object.keys(moviesDatabase)[0];
             const movie = moviesDatabase[movieId];
 
             if (!movie) {
@@ -171,7 +175,7 @@
             }
 
             // Update page title
-            document.getElementById('page-title').textContent = `${movie.titleThai} - Major Cineplex`;
+            document.getElementById('page-title').textContent = `${movie.titleThai} - Cinema`;
 
             // Update hero section
             const realPoster = window.cinemaMovieImages?.getRealMoviePoster
@@ -184,31 +188,73 @@
 
             // Update genres
             const genresContainer = document.getElementById('hero-genres');
-            genresContainer.innerHTML = movie.genres.map(genre => 
+            genresContainer.innerHTML = (movie.genres || []).map(genre => 
                 `<span class="px-3 py-1 rounded-full border border-white/20 text-xs font-medium text-white/80">${genre}</span>`
             ).join('');
             genresContainer.innerHTML += `<span class="px-3 py-1 rounded-full bg-white/10 text-xs font-medium text-white/80">${movie.duration}</span>`;
 
             // Update title
-            document.getElementById('hero-title').innerHTML = `${movie.titleThai} <span class="block text-2xl md:text-3xl font-normal text-gray-300 mt-1">${movie.titleEng}</span>`;
+            const esc = window.cinemaApi.escapeHtml;
+            document.getElementById('hero-title').innerHTML = `${esc(movie.titleThai)} <span class="block text-2xl md:text-3xl font-normal text-gray-300 mt-1">${esc(movie.titleEng || '')}</span>`;
 
             // Update rating and reviews
-            document.getElementById('hero-rating').textContent = movie.rating;
-            document.getElementById('hero-reviews').textContent = `(${movie.reviews} Reviews)`;
-            document.getElementById('hero-release').textContent = `Release: ${movie.releaseDate}`;
+            document.getElementById('hero-rating').textContent = movie.rating || '-';
+            document.getElementById('hero-reviews').textContent = movie.reviews ? `(${movie.reviews} Reviews)` : '';
+            document.getElementById('hero-release').textContent = movie.releaseDate ? `Release: ${movie.releaseDate}` : '';
             document.getElementById('hero-description').textContent = movie.description;
 
-            // Update showtimes
+            // Update showtimes (grouped by date → cinema → format)
             const showtimesContainer = document.getElementById('showtimes-container');
-            showtimesContainer.innerHTML = movie.showtimes.map(cinema => `
+            const dateTabs = document.getElementById('date-tabs');
+            const allDates = [...new Set((movie.showtimes || []).flatMap((cinema) =>
+                cinema.systems.flatMap((system) => system.times.map((slot) => slot.date))))].filter(Boolean).sort();
+            const requestedDate = params.get('date');
+            let selectedDate = allDates.includes(requestedDate) ? requestedDate : allDates[0];
+
+            function renderDateTabs() {
+                if (!allDates.length) {
+                    dateTabs.innerHTML = '';
+                    return;
+                }
+                dateTabs.innerHTML = allDates.map((date) => {
+                    const active = date === selectedDate;
+                    return `<button type="button" role="tab" aria-selected="${active}" data-date="${date}"
+                        class="date-tab flex-shrink-0 px-4 py-2 rounded-lg border text-sm font-bold transition-colors ${active ? 'bg-primary text-white border-primary' : 'bg-white text-slate-700 border-gray-200 hover:border-primary'}">
+                        ${window.cinemaApi.formatThaiDate(date)}</button>`;
+                }).join('');
+                dateTabs.querySelectorAll('.date-tab').forEach((tab) => {
+                    tab.addEventListener('click', () => {
+                        selectedDate = tab.dataset.date;
+                        renderDateTabs();
+                        renderShowtimes();
+                    });
+                });
+            }
+
+            function renderShowtimes() {
+                const cinemas = (movie.showtimes || []).map((cinema) => ({
+                    ...cinema,
+                    systems: cinema.systems
+                        .map((system) => ({ ...system, times: system.times.filter((slot) => slot.date === selectedDate) }))
+                        .filter((system) => system.times.length)
+                })).filter((cinema) => cinema.systems.length);
+
+                if (!cinemas.length) {
+                    showtimesContainer.innerHTML = `<div class="text-center text-slate-500 py-16">
+                        <span class="material-symbols-outlined text-4xl block mb-2">event_busy</span>
+                        ${movie.status === 'coming_soon' ? 'ภาพยนตร์เรื่องนี้ยังไม่เปิดจำหน่ายตั๋ว' : 'ยังไม่มีรอบฉายที่เปิดจองในขณะนี้'}</div>`;
+                    return;
+                }
+
+                showtimesContainer.innerHTML = cinemas.map(cinema => `
                 <div class="flex flex-col md:flex-row gap-6 pb-8 border-b border-gray-100 last:border-0">
                     <div class="w-full md:w-1/4">
-                        <h3 class="text-lg font-bold text-slate-900 mb-1">${cinema.cinema}</h3>
-                        <p class="text-sm text-slate-500 mb-3 flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm">near_me</span> ${cinema.distance}
-                        </p>
+                        <h3 class="text-lg font-bold text-slate-900 mb-1">${esc(cinema.cinema)}</h3>
+                        ${cinema.distance ? `<p class="text-sm text-slate-500 mb-3 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">near_me</span> ${esc(cinema.distance)}
+                        </p>` : ''}
                         <div class="flex gap-2 flex-wrap">
-                            ${cinema.amenities.map(amenity => `<span class="text-[10px] font-bold px-2 py-1 bg-gray-100 text-slate-600 rounded uppercase tracking-wider">${amenity}</span>`).join('')}
+                            ${(cinema.amenities || []).map(amenity => `<span class="text-[10px] font-bold px-2 py-1 bg-gray-100 text-slate-600 rounded uppercase tracking-wider">${esc(amenity)}</span>`).join('')}
                         </div>
                     </div>
                     <div class="w-full md:w-3/4 space-y-6">
@@ -216,15 +262,15 @@
                             <div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <div class="h-6 px-3 ${system.format === 'IMAX' ? 'w-12 bg-black' : 'bg-gray-200'} rounded flex items-center justify-center ${system.format === 'VIP Class' ? 'border border-yellow-200 bg-yellow-100' : ''}">
-                                        <span class="${system.format === 'IMAX' ? 'text-blue-400 font-black italic text-xs tracking-widest' : 'text-slate-600 font-bold text-xs'}">${system.format}</span>
+                                        <span class="${system.format === 'IMAX' ? 'text-blue-400 font-black italic text-xs tracking-widest' : 'text-slate-600 font-bold text-xs'}">${esc(system.format)}</span>
                                     </div>
-                                    <span class="text-sm font-medium text-slate-700">${system.type}</span>
+                                    <span class="text-sm font-medium text-slate-700">${esc(system.type)}</span>
                                 </div>
                                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
                                     ${system.times.map(showtime => `
-                                        <button class="group relative flex flex-col items-center justify-center py-2 px-3 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-all showtime-btn" data-showtime="${showtime.time}" data-hall="${showtime.hall}">
-                                            <span class="text-lg font-bold text-slate-900 group-hover:text-primary">${showtime.time}</span>
-                                            <span class="text-[10px] text-slate-500">${showtime.hall}</span>
+                                        <button class="group relative flex flex-col items-center justify-center py-2 px-3 border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-all showtime-btn" data-showtime-id="${esc(showtime.showtimeId)}">
+                                            <span class="text-lg font-bold text-slate-900 group-hover:text-primary">${esc(showtime.time)}</span>
+                                            <span class="text-[10px] text-slate-500">${esc(showtime.hall)}</span>
                                         </button>
                                     `).join('')}
                                 </div>
@@ -233,6 +279,21 @@
                     </div>
                 </div>
             `).join('');
+
+                showtimesContainer.querySelectorAll('.showtime-btn').forEach(btn => {
+                    btn.addEventListener('click', () => goToSeatSelection(btn.dataset.showtimeId));
+                });
+            }
+
+            function goToSeatSelection(showtimeId) {
+                if (!showtimeId) return;
+                window.authModule.requireLogin(() => {
+                    window.location.href = `seat-selection.html?showtimeId=${encodeURIComponent(showtimeId)}`;
+                });
+            }
+
+            renderDateTabs();
+            renderShowtimes();
 
             // Update cast
             const castContainer = document.getElementById('cast-container');
@@ -339,42 +400,21 @@
                     : '<span class="material-symbols-outlined">add</span>เพิ่มไป Watchlist';
             }
 
-            const filteredCast = movie.cast.filter(actor => String(actor?.name || '').trim() !== 'Junior Kajbhunditt');
+            const filteredCast = (movie.cast || []).filter(actor => String(actor?.name || '').trim() !== 'Junior Kajbhunditt');
 
             castContainer.innerHTML = filteredCast.map(actor => `
                 <div class="flex flex-col items-center text-center">
                     <div class="w-24 h-24 rounded-full bg-gray-200 mb-3 overflow-hidden shadow-md">
                         <div class="w-full h-full bg-cover bg-center" style="background-image: url('${getCastImage(actor)}');"></div>
                     </div>
-                    <h4 class="font-bold text-slate-900 text-sm">${actor.name}</h4>
-                    <p class="text-xs text-slate-500">${actor.role}</p>
+                    <h4 class="font-bold text-slate-900 text-sm">${esc(actor.name)}</h4>
+                    <p class="text-xs text-slate-500">${esc(actor.role)}</p>
                 </div>
             `).join('');
 
-            // Handle showtime button clicks
-            document.querySelectorAll('.showtime-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const time = btn.getAttribute('data-showtime');
-                    const hall = btn.getAttribute('data-hall');
-                    window.authModule.requireLogin(() => {
-                        // Store selection and navigate to seat selection
-                        sessionStorage.setItem('selectedMovieId', movieId);
-                        sessionStorage.setItem('selectedTime', time);
-                        sessionStorage.setItem('selectedHall', hall);
-                        window.location.href = 'seat-selection.html';
-                    });
-                });
-            });
-
-            // Handle buy ticket button
+            // Buy ticket → jump to the showtime list
             document.getElementById('buy-ticket-hero-btn').addEventListener('click', () => {
-                const firstShowtime = movie.showtimes[0].systems[0].times[0];
-                window.authModule.requireLogin(() => {
-                    sessionStorage.setItem('selectedMovieId', movieId);
-                    sessionStorage.setItem('selectedTime', firstShowtime.time);
-                    sessionStorage.setItem('selectedHall', firstShowtime.hall);
-                    window.location.href = 'seat-selection.html';
-                });
+                showtimesContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
 
             const watchlistBtn = document.getElementById('watchlist-hero-btn');
@@ -482,21 +522,10 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
-        import { initializeAuthUI } from './auth.js';
+    import { app, firebaseConfig } from './firebase-init.js';
+    import { initializeAuthUI } from './auth.js';
 
-        const firebaseConfig = {
-            apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-            authDomain: 'frame-4e170.firebaseapp.com',
-            projectId: 'frame-4e170',
-            storageBucket: 'frame-4e170.firebasestorage.app',
-            messagingSenderId: '585102075629',
-            appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-            measurementId: 'G-0TCR1Y4LP2'
-        };
-
-        const app = initializeApp(firebaseConfig);
-        initializeAuthUI(app, firebaseConfig);
-    </script>
+    initializeAuthUI(app, firebaseConfig);
+</script>
 </body>
 </html>

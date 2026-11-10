@@ -13,10 +13,7 @@ window.authModule = {};
 
 export function initializeAuthUI(firebaseApp, firebaseConfig) {
     const auth = getAuth(firebaseApp);
-    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const apiBase = "https://api-a2dyr3baya-as.a.run.app";
-
-    const FALLBACK_AUTH_KEY = 'cinema.fallbackAuth';
+    const api = window.cinemaApi;
     let isAuthenticated = false;
     let authStateResolved = false;
     const pendingRequireLoginCallbacks = [];
@@ -45,47 +42,21 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
         memberPointsEl.textContent = `${value.toLocaleString('th-TH')} คะแนน`;
     }
 
-    async function syncMemberPoints(uid) {
-        if (!uid) {
-            setMemberPoints(0);
-            return;
-        }
+    // Creates/updates the profile on the server (uid and email come from the ID token).
+    async function syncProfile(displayName) {
         try {
-            const response = await fetch(`${apiBase}/api/users/${encodeURIComponent(uid)}`);
-            if (!response.ok) {
-                setMemberPoints(0);
-                return;
-            }
-            const profile = await response.json();
+            const profile = await api.request('/api/me', {
+                method: 'POST',
+                body: displayName ? { displayName } : {}
+            });
             setMemberPoints(profile?.loyaltyPoints || 0);
-        } catch (_error) {
+            window.authModule.profile = profile;
+            return profile;
+        } catch (error) {
+            console.warn('Could not sync user profile to backend:', error);
             setMemberPoints(0);
-        }
-    }
-
-    function readFallbackSession() {
-        try {
-            const raw = localStorage.getItem(FALLBACK_AUTH_KEY);
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            if (!parsed || !parsed.uid || !parsed.email) return null;
-            return parsed;
-        } catch (_error) {
             return null;
         }
-    }
-
-    function writeFallbackSession(profile) {
-        if (!profile?.uid || !profile?.email) return;
-        localStorage.setItem(FALLBACK_AUTH_KEY, JSON.stringify({
-            uid: profile.uid,
-            email: profile.email,
-            displayName: profile.displayName || 'ผู้ใช้'
-        }));
-    }
-
-    function clearFallbackSession() {
-        localStorage.removeItem(FALLBACK_AUTH_KEY);
     }
 
     function flushRequireLoginCallbacks() {
@@ -120,7 +91,6 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
         if (userNameDisplay) userNameDisplay.textContent = displayName;
         profileBtn.style.opacity = '1';
 
-        if (uid) syncMemberPoints(uid);
         closeAuthModal();
     }
 
@@ -259,59 +229,9 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
             }
 
             try {
-                const result = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Login successful:', result.user);
-
-                applyAuthenticatedProfile({
-                    uid: result.user.uid,
-                    email: result.user.email || '',
-                    displayName: result.user.displayName || 'ผู้ใช้'
-                });
-
-                try {
-                    await fetch(`${apiBase}/api/users`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            uid: result.user.uid,
-                            email: result.user.email,
-                            displayName: result.user.displayName || 'ผู้ใช้'
-                        })
-                    });
-                } catch (backendError) {
-                    console.warn('Could not sync user profile to backend:', backendError);
-                }
-                
-                // Store user uid in localStorage for use across pages
-                localStorage.setItem('cinema.uid', result.user.uid);
-                localStorage.setItem('cinema.userEmail', result.user.email);
-                localStorage.setItem('cinema.userDisplayName', result.user.displayName || '');
-
+                await signInWithEmailAndPassword(auth, email, password);
                 loginForm.reset();
             } catch (error) {
-                if (error?.code === 'auth/network-request-failed') {
-                    try {
-                        const usersResponse = await fetch(`${apiBase}/api/users`);
-                        const users = usersResponse.ok ? await usersResponse.json() : [];
-                        const fallbackUser = Array.isArray(users)
-                            ? users.find((item) => String(item.email || '').trim().toLowerCase() === String(email).trim().toLowerCase())
-                            : null;
-
-                        if (fallbackUser?.uid && fallbackUser?.email) {
-                            applyAuthenticatedProfile({
-                                uid: fallbackUser.uid,
-                                email: fallbackUser.email,
-                                displayName: fallbackUser.displayName || 'ผู้ใช้'
-                            });
-                            writeFallbackSession(fallbackUser);
-                            loginForm.reset();
-                            return;
-                        }
-                    } catch (_fallbackError) {
-                    }
-                }
                 showError('login', getFriendlyAuthErrorMessage(error, 'login'));
             }
         });
@@ -367,27 +287,7 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
                     displayName: nickname
                 });
 
-                // Store user uid in localStorage for use across pages
-                localStorage.setItem('cinema.uid', result.user.uid);
-                localStorage.setItem('cinema.userEmail', result.user.email);
-                localStorage.setItem('cinema.userDisplayName', nickname);
-
-                // Save user profile to backend
-                try {
-                    await fetch(`${apiBase}/api/users`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            uid: result.user.uid,
-                            email: result.user.email,
-                            displayName: nickname
-                        })
-                    });
-                } catch (backendError) {
-                    console.warn('Could not save user profile to backend:', backendError);
-                }
+                await syncProfile(nickname);
 
                 console.log('Signup successful:', result.user);
                 signupForm.reset();
@@ -444,7 +344,6 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
                 localStorage.removeItem('cinema.uid');
                 localStorage.removeItem('cinema.userEmail');
                 localStorage.removeItem('cinema.userDisplayName');
-                clearFallbackSession();
                 
                 if (profileMenu) profileMenu.classList.add('hidden');
             } catch (error) {
@@ -457,40 +356,23 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
     onAuthStateChanged(auth, (user) => {
         authStateResolved = true;
         if (user) {
-            clearFallbackSession();
             applyAuthenticatedProfile({
                 uid: user.uid,
                 email: user.email || '',
                 displayName: user.displayName || 'ผู้ใช้'
             });
             flushRequireLoginCallbacks();
-
-            fetch(`${apiBase}/api/users`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    uid: user.uid,
-                    email: user.email || '',
-                    displayName: user.displayName || 'ผู้ใช้'
-                })
-            }).catch(() => {});
+            syncProfile();
         } else {
-            const fallbackSession = readFallbackSession();
-            if (fallbackSession) {
-                applyAuthenticatedProfile(fallbackSession);
-                flushRequireLoginCallbacks();
-                return;
-            }
+            localStorage.removeItem('cinema.uid');
+            localStorage.removeItem('cinema.userEmail');
+            localStorage.removeItem('cinema.userDisplayName');
+            window.authModule.profile = null;
             applyLoggedOutState();
-        }
-
-        if (!isAuthenticated) {
             pendingRequireLoginCallbacks.length = 0;
         }
     });
-    
+
     // Export requireLogin function globally
     window.authModule.requireLogin = function(callback) {
         if (isAuthenticated) {

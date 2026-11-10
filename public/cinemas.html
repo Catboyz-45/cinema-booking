@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { primary: '#e9508c', 'background-light': '#f8f6f7' } } } };
   </script>
@@ -328,21 +330,10 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
+    import { app, firebaseConfig } from './firebase-init.js';
     import { initializeAuthUI } from './auth.js';
 
-    const firebaseConfig = {
-      apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-      authDomain: 'frame-4e170.firebaseapp.com',
-      projectId: 'frame-4e170',
-      storageBucket: 'frame-4e170.firebasestorage.app',
-      messagingSenderId: '585102075629',
-      appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-      measurementId: 'G-0TCR1Y4LP2'
-    };
-
-    const app = initializeApp(firebaseConfig);
     initializeAuthUI(app, firebaseConfig);
-  </script>
+</script>
 </body>
 </html>

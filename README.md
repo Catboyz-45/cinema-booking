@@ -6,27 +6,56 @@
 
 ## เกี่ยวกับโปรเจกต์
 
-Cinema Booking ช่วยให้ผู้ใช้ค้นหาภาพยนตร์ ดูรายละเอียดและรอบฉาย เลือกที่นั่ง ตรวจสอบราคา และยืนยันการจองได้ภายในเว็บไซต์เดียว นอกจากนี้ยังมีระบบสมาชิก คะแนนสะสม โปรโมชั่น และหน้าสำหรับตรวจสอบประวัติการจอง
+Cinema Booking ช่วยให้ผู้ใช้ค้นหาภาพยนตร์ ดูรายละเอียดและรอบฉาย เลือกที่นั่ง ตรวจสอบราคา และยืนยันการจองได้ภายในเว็บไซต์เดียว นอกจากนี้ยังมีระบบสมาชิก คะแนนสะสม โปรโมชั่น หน้าตรวจสอบประวัติการจอง และระบบหลังบ้านสำหรับผู้ดูแลระบบ
 
 โปรเจกต์นี้แสดงการประยุกต์ใช้ Firebase Authentication และ Cloud Firestore ร่วมกับ REST API บน Express และ Firebase Cloud Functions โดยแยกส่วนหน้าเว็บ ส่วน API และการตั้งค่า deployment ออกจากกันอย่างชัดเจน
 
+## บัญชีทดลองสำหรับตรวจงาน
+
+ข้อมูลในระบบเป็นข้อมูลสมมุติสำหรับงานรายวิชา ใช้บัญชีด้านล่างเข้าสู่ระบบได้ทันที
+
+| บทบาท | อีเมล | รหัสผ่าน | ใช้ทดสอบ |
+| --- | --- | --- | --- |
+| ผู้ดูแลระบบ | `admin@cinemabooking.test` | `Admin02739322!` | หน้า `/admin.html` (จัดการภาพยนตร์ รอบฉาย ราคา โปรโมชั่น เช็คอิน รายงาน) |
+| ลูกค้า | `customer@cinemabooking.test` | `Customer02739322!` | จองตั๋ว ใช้โค้ด `FREE100` หรือ `MONDAY100` ดูประวัติการจอง |
+
+- เป็นบัญชีทดลองสำหรับตรวจงานเท่านั้น
+- การชำระเงินใช้ **Stripe โหมดทดสอบ (Sandbox)** ไม่มีการตัดเงินจริง ในหน้าชำระเงินของ Stripe ใช้บัตรทดสอบ `4242 4242 4242 4242` วันหมดอายุใดก็ได้ในอนาคต (เช่น `12/30`) CVC `123` หรือเลือก PromptPay แล้วกดยืนยันการชำระเงินทดสอบ
+
 ## ความสามารถหลัก
 
+### ฝั่งลูกค้า
+
 - สมัครสมาชิกและเข้าสู่ระบบด้วย Firebase Authentication
-- แสดงภาพยนตร์ที่กำลังฉายและโปรแกรมหน้า
-- ค้นหาและกรองรายการภาพยนตร์
-- แสดงรายละเอียดภาพยนตร์ ตัวอย่าง และข้อมูลรอบฉาย
-- เลือกโรงภาพยนตร์ รอบฉาย และที่นั่ง
-- แบ่งประเภทที่นั่งเป็น Sofa Pair, Premium และ Regular
-- คำนวณราคาตั๋ว ค่าบริการ และส่วนลด
-- รองรับโค้ดส่วนลดและการใช้คะแนนสะสม
-- ตรวจสอบสถานะที่นั่งและป้องกันการจองที่นั่งซ้ำในระดับข้อมูล
-- บันทึกข้อมูลการจองด้วย Cloud Firestore
-- แสดงหน้าสรุปและหลักฐานยืนยันการจอง
-- แสดงประวัติการจองและข้อมูลสมาชิก
-- รองรับหน้าโปรโมชั่น โรงภาพยนตร์ สมาชิก และข้อมูลช่วยเหลือ
-- มี REST API สำหรับภาพยนตร์ รอบฉาย ที่นั่ง ผู้ใช้ และการจอง
-- รองรับทั้ง Express server สำหรับพัฒนาในเครื่องและ Firebase Hosting สำหรับ deployment
+- ค้นหาและกรองภาพยนตร์ ดูรายละเอียดและนักแสดง
+- **ค้นหารอบฉายตามวันที่** (รอบฉายล่วงหน้า 14 วัน)
+- เลือกที่นั่ง (Sofa Pair, Premium, Regular) โดยราคามาจากการตั้งค่าของแอดมิน
+- **ล็อกที่นั่งชั่วคราว** ระหว่างชำระเงิน (ค่าเริ่มต้น 12 นาที) หมดเวลาแล้วระบบคืนที่นั่งอัตโนมัติ
+- ใช้โค้ดส่วนลดและคะแนนสะสม (ราคาคำนวณที่ server ทั้งหมด)
+- ชำระเงินผ่าน **Stripe Checkout (โหมดทดสอบ)** รองรับบัตรเครดิตและ PromptPay ระบบตรวจผลการชำระกับ Stripe ที่ server ก่อนออกตั๋ว
+- ถ้าจ่ายสำเร็จแต่ที่นั่งหลุดไปแล้ว ระบบคืนเงินผ่าน Stripe อัตโนมัติ
+- E-Ticket พร้อม **QR Code จริง** สำหรับสแกนหน้าโรง และคิวอีเมลส่งตั๋ว
+- ประวัติการจองพร้อมสถานะ (รอชำระเงิน / ชำระแล้ว / ใช้แล้ว / ยกเลิก / หมดเวลา)
+
+### ฝั่งผู้ดูแลระบบ (`/admin.html`)
+
+| เมนู | ความสามารถ |
+| --- | --- |
+| ภาพรวม | รายได้ ตั๋ว การจองวันนี้ กราฟรายได้ 7 วัน หนังขายดี และรอบฉายวันนี้ |
+| ภาพยนตร์ | เพิ่ม / แก้ไข / ลบ (เรื่องที่มีประวัติการจองจะเก็บถาวรแทนการลบ) |
+| รอบฉาย | สร้างหลายวันหลายเวลาพร้อมกัน กันรอบชนกันในโรงเดียวกัน ย้าย/ปิดรอบ ดูผังที่นั่ง |
+| การจอง / เช็คอิน | ค้นหาด้วย Booking ID หรืออีเมล เช็คอินด้วยการสแกน QR (กล้อง) ยกเลิกและคืนเงิน (คืนผ่าน Stripe อัตโนมัติ) |
+| รายงาน | ยอดขายรายวัน/รายเดือน ผู้ชมแยกตามภาพยนตร์ ที่นั่งที่ถูกจองในแต่ละรอบ ส่งออก Excel (CSV) และ PDF |
+| ราคาตั๋ว | ราคาแต่ละประเภทที่นั่ง ค่าบริการ เวลาล็อกที่นั่ง และกติกาคะแนนสะสม |
+| โปรโมชั่น | สร้างโค้ดส่วนลด (บาท/เปอร์เซ็นต์) กำหนดวันที่ใช้ได้ ช่วงเวลา และจำนวนสิทธิ์ |
+| ผู้ใช้ | ดูรายชื่อสมาชิก ให้หรือถอนสิทธิ์ผู้ดูแลระบบ |
+
+### ความปลอดภัย
+
+- ทุก endpoint ที่เกี่ยวกับผู้ใช้ตรวจ **Firebase ID token** ที่ server (ไม่เชื่อ `uid` ที่ส่งมาจากหน้าเว็บ)
+- ลูกค้าเห็นได้เฉพาะข้อมูลและการจองของตัวเอง ส่วน `/api/admin/*` ใช้ได้เฉพาะ role `admin`
+- การจอง การชำระเงิน การคืนเงิน และการเช็คอินทำใน Firestore transaction จึงไม่เกิดการจองที่นั่งซ้ำ
+- `firestore.rules` ปิดการเข้าถึง Firestore จากหน้าเว็บโดยตรงทั้งหมด (ทุกอย่างผ่าน API)
 
 ## เทคโนโลยีที่ใช้
 
@@ -36,151 +65,132 @@ Cinema Booking ช่วยให้ผู้ใช้ค้นหาภาพ�
 | Backend | Node.js, Express |
 | Authentication | Firebase Authentication |
 | Database | Cloud Firestore |
-| Serverless API | Firebase Cloud Functions |
+| Serverless API | Firebase Cloud Functions (HTTP + Scheduler) |
+| Payment | Stripe Checkout (Test mode / Sandbox) |
 | Hosting | Firebase Hosting |
-| Runtime | Node.js 22 สำหรับ Cloud Functions |
+| Runtime | Node.js 22 |
 
 ## โครงสร้างโปรเจกต์
 
 ```text
 .
-├── public/                         # หน้าเว็บและ JavaScript ฝั่งผู้ใช้
-│   ├── index.html                  # หน้าแรกและรายการภาพยนตร์
-│   ├── movies.html                 # หน้าค้นหาและเลือกภาพยนตร์
-│   ├── movie-details.html          # รายละเอียดภาพยนตร์และรอบฉาย
-│   ├── seat-selection.html         # เลือกที่นั่ง
-│   ├── checkout.html               # ตรวจสอบราคาและยืนยันการจอง
-│   ├── booking-confirmation.html   # สรุปผลการจอง
-│   ├── user.html                   # โปรไฟล์และประวัติผู้ใช้
-│   ├── auth.js                     # การเชื่อมต่อ Firebase Authentication
-│   └── movies-data.js              # ข้อมูลภาพยนตร์สำหรับหน้าเว็บ
+├── public/
+│   ├── index.html, movies.html          # หน้าแรกและรายการภาพยนตร์
+│   ├── movie-details.html               # รายละเอียดภาพยนตร์ + เลือกวัน/รอบฉาย
+│   ├── seat-selection.html              # เลือกที่นั่ง + ล็อกที่นั่ง
+│   ├── checkout.html                    # ส่วนลด คะแนน และชำระเงิน
+│   ├── booking-confirmation.html        # E-Ticket + QR Code
+│   ├── user.html                        # โปรไฟล์และประวัติการจอง
+│   ├── admin.html, admin.js             # ระบบหลังบ้าน
+│   ├── firebase-init.js                 # Firebase config (ที่เดียว)
+│   ├── cinema-api.js                    # client สำหรับเรียก API พร้อม ID token
+│   ├── auth.js                          # หน้าต่างเข้าสู่ระบบ / สมัครสมาชิก
+│   └── movies-data.js                   # ข้อมูลภาพยนตร์สำรอง (ใช้เมื่อเรียก API ไม่ได้)
 ├── functions/
-│   ├── data/
-│   │   └── movies-data.js          # ข้อมูลภาพยนตร์สำหรับ Cloud Functions
-│   ├── index.js                    # REST API บน Firebase Cloud Functions
-│   └── package.json                # dependencies ของ Functions
-├── server.js                       # Express server สำหรับพัฒนาในเครื่อง
-├── firebase.json                   # Firebase Hosting และ Functions config
-├── .firebaserc                     # Firebase project aliases
-├── .env.example                    # ตัวอย่าง environment variables
-└── package.json                    # dependencies และคำสั่งของโปรเจกต์
+│   ├── index.js                         # export Cloud Functions (api, releaseExpiredHolds)
+│   ├── app.js                           # REST API ทั้งหมด (ใช้ร่วมกับ server.js)
+│   ├── lib/domain.js                    # ผังที่นั่ง ราคา ส่วนลด กติกาโปรโมชั่น
+│   ├── lib/store.js                     # transaction: ล็อกที่นั่ง ชำระเงิน คืนเงิน เช็คอิน
+│   ├── lib/payments.js                  # Stripe Checkout (สร้างหน้าชำระเงิน ตรวจผล คืนเงิน)
+│   ├── lib/seed.js                      # สร้างข้อมูลตั้งต้น / migrate ข้อมูลเวอร์ชันเก่า
+│   ├── data/movies-data.js              # ข้อมูลภาพยนตร์ตั้งต้น
+│   └── test/e2e.mjs                     # ทดสอบ API แบบ end-to-end บน emulator
+├── server.js                            # Express server สำหรับรันในเครื่อง
+├── firebase.json, firestore.rules       # Hosting, Functions, Emulators, Firestore rules
+└── package.json
 ```
+
+### โครงสร้างข้อมูลใน Firestore
+
+| Collection | ข้อมูล |
+| --- | --- |
+| `movies` | ภาพยนตร์ (`status`: `now_showing`, `coming_soon`, `archived`) |
+| `showtimes` | รอบฉาย (`movieId`, `cinema`, `hall`, `date`, `startTime`, `endTime`, `status`) |
+| `seatMaps` | ที่นั่งของแต่ละรอบ (`booked` และ `holds` ที่มีเวลาหมดอายุ) |
+| `bookings` | การจอง (`status`: `pending` → `paid` → `used` หรือ `cancelled` / `expired`) |
+| `users` | สมาชิก คะแนนสะสม โค้ดที่ใช้แล้ว และ `role` |
+| `promotions` | โค้ดส่วนลด |
+| `cinemas` | โรงภาพยนตร์และโรงย่อย |
+| `settings/pricing` | ราคาที่นั่ง ค่าบริการ เวลาล็อกที่นั่ง กติกาคะแนน |
+| `mail` | อีเมล E-Ticket (รูปแบบของ Firebase Extension "Trigger Email") |
 
 ## การติดตั้งและรัน
 
 ### สิ่งที่ต้องมี
 
-- Node.js เวอร์ชันที่รองรับ dependencies ของโปรเจกต์
-- npm
-- Firebase CLI หากต้องการใช้ Emulator หรือ deploy
-- Firebase project ที่เปิดใช้งาน Authentication, Cloud Firestore, Cloud Functions และ Hosting
-
-โปรเจกต์ตั้งค่า Firebase project เริ่มต้นเป็น `my-web-project-491413` ควรตรวจสอบ project ID ให้ถูกต้องก่อนใช้ Emulator หรือ deploy
-
-### ขั้นตอน
+- Node.js 22, npm และ Firebase CLI (`npm install -g firebase-tools`)
+- Java 11+ (สำหรับ Firestore emulator)
 
 ```bash
-git clone <repository-url>
-cd cinebook-th
 npm install
-npm run dev
+cd functions && npm install && cd ..
 ```
 
-จากนั้นเปิด:
+### รันในเครื่องด้วย Firebase Emulator (แนะนำ)
 
-```text
-http://localhost:3000
-```
-
-หากต้องการเชื่อมต่อ Firebase Admin ในเครื่อง ให้กำหนด path ของ service account ผ่าน environment variable ก่อนรันเซิร์ฟเวอร์:
+ใช้โปรเจกต์จำลอง `demo-cinema` จึงไม่แตะข้อมูลจริง
 
 ```bash
-export FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/to/firebase-service-account.json
-npm run dev
+npm run emulators
 ```
 
-ไฟล์ `.env.example` แสดงรายการตัวแปรที่รองรับ ห้าม commit service account, API key ที่เป็นความลับ หรือไฟล์ `.env` ลง repository
+- เว็บไซต์: http://127.0.0.1:5050
+- Emulator UI (ดูข้อมูลใน Firestore / Auth): http://127.0.0.1:4000
+- สมัครสมาชิกด้วยอีเมล `admin@cinema.test` จะได้สิทธิ์แอดมินอัตโนมัติ (ตั้งไว้ใน `functions/.env.demo-cinema`) แล้วเข้า http://127.0.0.1:5050/admin.html
 
-## การใช้งาน Firebase
+บน emulator การชำระเงินเป็นแบบจำลองเสมอ หากต้องการลอง Stripe ในเครื่อง ให้ใส่ `STRIPE_SECRET_KEY` ใน `functions/.env` และสร้าง `functions/.env.local` ที่มี `USE_STRIPE_IN_EMULATOR=true` (ทั้งสองไฟล์ไม่ถูก commit) แล้วรัน `npm run emulators` ใหม่ (ลบ `.env.local` ก่อนรัน `npm test`)
 
-ติดตั้ง dependencies ของ Cloud Functions:
+### ทดสอบ
 
 ```bash
-cd functions
-npm install
-cd ..
+npm test
 ```
 
-เข้าสู่ระบบและตรวจสอบ Firebase project:
+เปิด emulator ใหม่ รันการทดสอบ API แบบ end-to-end (สมัครสมาชิก ล็อกที่นั่ง จ่ายเงิน หมดเวลา คืนเงิน เช็คอิน รายงาน สิทธิ์แอดมิน ฯลฯ) แล้วปิด emulator
+
+### รันด้วย Express server (เชื่อม Firestore จริง)
 
 ```bash
-firebase login
-firebase use
+FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/to/service-account.json npm run dev
 ```
 
-รัน Emulator:
+ห้าม commit service account หรือไฟล์ `.env` ลง repository
 
-```bash
-firebase emulators:start
-```
+## Deploy และตั้งค่าผู้ดูแลระบบ
 
-Deploy Hosting และ Functions:
+ทุกส่วน (Authentication, Firestore, Functions, Hosting) อยู่ใน Firebase project **Cinema Booking 02739322** (Project ID `my-web-project-491413`)
 
-```bash
-firebase deploy --only hosting,functions
-```
+1. สร้างไฟล์ `functions/.env` จาก `functions/.env.example` (ไฟล์นี้ไม่ถูก commit)
+   - `ADMIN_EMAILS` = อีเมลผู้ดูแลระบบ คั่นหลายอีเมลด้วยจุลภาคได้
+   - `STRIPE_SECRET_KEY` = Secret key ของ Stripe **Sandbox** (ขึ้นต้นด้วย `sk_test_`) จาก Stripe Dashboard → Developers → API keys ระบบไม่ยอมรับ live key
+   - ถ้าไม่ใส่ `STRIPE_SECRET_KEY` ระบบจะกลับไปใช้การชำระเงินแบบจำลอง
+2. Deploy
 
-ตรวจสอบชื่อ Firebase project และ environment ที่เลือกก่อน deploy ทุกครั้ง
+   ```bash
+   firebase deploy --only hosting,functions,firestore:rules
+   ```
 
-## การตรวจสอบคุณภาพโค้ด
+3. เมื่อแอดมินคนแรกเข้าสู่ระบบ จะให้สิทธิ์คนอื่นเพิ่มได้จากเมนู "ผู้ใช้" ในหน้าแอดมิน
 
-คำสั่งที่ใช้ตรวจสอบเบื้องต้น:
+ครั้งแรกที่ API ทำงาน ระบบจะ migrate ข้อมูลเดิมให้อัตโนมัติ: สร้างรอบฉายแบบมีวันที่ 7 วันข้างหน้า ซ่อนรอบเก่าที่ไม่มีวันที่ และตั้งสถานะการจองเดิมเป็น "ชำระแล้ว"
 
-```bash
-node --check server.js
-node --check functions/index.js
-npm audit
-```
+ฟังก์ชัน `releaseExpiredHolds` ทำงานทุก 5 นาทีเพื่อปิดการจองที่ไม่ชำระเงิน (ต้องใช้ Blaze plan ซึ่ง Cloud Functions ต้องใช้อยู่แล้ว) ถ้าไม่ได้ deploy ฟังก์ชันนี้ ที่นั่งก็ยังถูกคืนตามเวลาเพราะ API ตรวจเวลาหมดอายุทุกครั้งที่อ่าน
 
-สถานะการตรวจล่าสุด:
-
-- JavaScript syntax ของ Express server — ผ่าน
-- JavaScript syntax ของ Firebase Functions — ผ่าน
-- ตรวจสอบ local links และ assets ใน HTML จำนวน 19 หน้า — ผ่าน
-- `npm audit` — ผ่าน ไม่พบช่องโหว่ใน dependencies ระดับ root
-
-โปรเจกต์ยังไม่มี automated test suite จึงควรเพิ่ม unit และ integration tests ก่อนนำไปใช้จริง
-
-## สิ่งที่ได้เรียนรู้
-
-- ออกแบบขั้นตอนการจองตั๋วตั้งแต่เลือกภาพยนตร์จนถึงยืนยันการจอง
-- เชื่อมต่อ Firebase Authentication และ Cloud Firestore
-- สร้าง REST API ด้วย Express และ Firebase Cloud Functions
-- จัดการสถานะที่นั่ง ราคา ส่วนลด และคะแนนสะสม
-- แยก frontend, local server และ serverless backend ตามหน้าที่
-- ตั้งค่า Firebase Hosting rewrite เพื่อส่งคำขอ `/api` ไปยัง Cloud Functions
-- จัดโครงสร้าง repository และป้องกัน credentials ไม่ให้ถูก commit
+การส่ง E-Ticket ทางอีเมลต้องติดตั้ง Firebase Extension **Trigger Email** (ตั้ง collection เป็น `mail` และตั้งค่า SMTP) ถ้ายังไม่ติดตั้ง ระบบจะเก็บอีเมลไว้ใน collection `mail` เฉย ๆ
 
 ## สถานะและข้อจำกัด
 
-โปรเจกต์นี้จัดทำขึ้นเพื่อการเรียนรู้และนำเสนอผลงาน ยังไม่ใช่ระบบจำหน่ายตั๋วหรือระบบชำระเงินจริง การ checkout และการยืนยันการจองเป็นขั้นตอนสาธิตเท่านั้น
-
-ก่อนนำไปใช้ใน production ควรเพิ่มการตรวจสอบ Firebase ID token ใน backend, authorization และ record ownership สำหรับทุก endpoint ที่เกี่ยวข้องกับผู้ใช้ ปรับ CORS ให้รับเฉพาะ trusted origins เพิ่ม rate limiting, CSRF protection ตามรูปแบบการยืนยันตัวตน และใช้ transaction หรือ idempotency key กับขั้นตอนการจองที่สำคัญ
-
-ข้อมูลภาพยนตร์และรอบฉายบางส่วนเป็นข้อมูลตัวอย่าง รูปภาพบางรายการอ้างอิงแหล่งภายนอกซึ่งอาจเปลี่ยนแปลงหรือไม่พร้อมใช้งานในอนาคต
+- การชำระเงินใช้ Stripe โหมดทดสอบเท่านั้น หากจะรับเงินจริงต้องยืนยันบัญชี Stripe และเปลี่ยนเป็น live key
+- เปิด/ปิดช่องทางชำระเงิน (บัตร, PromptPay ฯลฯ) ได้ที่ Stripe Dashboard → Settings → Payment methods
+- ผังที่นั่งเป็นแบบเดียวทุกโรง (24 ที่นั่ง แถว A–D)
+- ข้อมูลภาพยนตร์ตั้งต้นและรูปภาพบางส่วนเป็นข้อมูลตัวอย่างจากแหล่งภายนอก
 
 ## แนวทางพัฒนาต่อ
 
-- เพิ่ม unit tests สำหรับการคำนวณราคา ส่วนลด และคะแนนสะสม
-- เพิ่ม integration tests สำหรับ API และ Cloud Firestore
-- เพิ่ม end-to-end tests สำหรับขั้นตอนเลือกภาพยนตร์จนถึงยืนยันการจอง
-- ตรวจสอบ Firebase ID token และสิทธิ์การเข้าถึงใน backend
-- เพิ่ม idempotency key และทดสอบ Firestore transaction ภายใต้การจองพร้อมกันจำนวนมาก
-- เพิ่มระบบชำระเงินจริงผ่าน payment provider ที่เชื่อถือได้
-- เพิ่มระบบแจ้งเตือนและส่งตั๋วผ่านอีเมล
-- เพิ่มแดชบอร์ดสำหรับผู้ดูแลภาพยนตร์ โรง และรอบฉาย
-- ปรับ accessibility และ responsive design ให้ครอบคลุมอุปกรณ์มากขึ้น
-- เพิ่ม CI สำหรับตรวจ syntax, lint, tests และ dependency audit
+- เพิ่ม Stripe webhook เพื่อยืนยันการชำระเงินทันทีแม้ลูกค้าปิดหน้าเว็บ (ตอนนี้ระบบตรวจซ้ำทุก 5 นาที)
+- กำหนดผังที่นั่งแยกตามโรงย่อย
+- เพิ่ม rate limiting และจำกัด CORS ให้รับเฉพาะโดเมนของเว็บไซต์
+- เพิ่ม CI สำหรับรัน `npm test`
 
 ## ผู้พัฒนา
 

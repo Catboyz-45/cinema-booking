@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
 <script src="movies-data.js"></script>
 <script>
         tailwind.config = {
@@ -54,7 +56,7 @@
         }
     </style>
 </head>
-<body class="bg-background-light text-slate-900 min-h-screen flex flex-col font-display antialiased">
+<body class="bg-background-light text-slate-900 min-h-screen flex flex-col font-display antialiased" data-no-bottom-nav>
 <!-- Navbar -->
 <div class="bg-surface border-b border-slate-200 sticky top-0 z-50">
 <div class="max-w-[1440px] mx-auto px-4 lg:px-8">
@@ -80,8 +82,9 @@
 <span class="text-slate-400">สิ้นสุด</span>
 </div>
 <div class="flex items-center gap-4">
-<div class="hidden sm:flex items-center gap-2 text-sm">
-<span class="text-slate-500">เวลาที่เหลือ:</span>
+<div class="flex items-center gap-1 sm:gap-2 text-sm rounded-full bg-primary/10 sm:bg-transparent px-3 py-1 sm:p-0" title="เวลาที่ล็อกที่นั่งไว้ให้">
+<span class="material-symbols-outlined text-primary text-base sm:hidden" aria-hidden="true">timer</span>
+<span class="text-slate-500 hidden sm:inline">เวลาที่เหลือ:</span>
 <span class="text-primary font-bold font-mono text-base" id="checkout-timer">12:00</span>
 </div>
 <button id="profile-btn" class="size-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-600">
@@ -189,7 +192,7 @@
 <span class="material-symbols-outlined text-base">sell</span>
 </div>
 <div>
-<p class="text-[28px] leading-none font-semibold text-slate-800">M-Gen Points</p>
+<p class="text-[28px] leading-none font-semibold text-slate-800">Cinema Points</p>
 </div>
 </div>
 <span class="text-xs font-semibold text-primary bg-white/80 border border-primary/20 rounded-full px-2 py-0.5">Member</span>
@@ -276,10 +279,16 @@
 </div>
 </div>
 </div>
+<div class="hidden rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900" id="stripe-panel">
+<p class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">lock</span>ชำระเงินผ่าน Stripe (โหมดทดสอบ)</p>
+<p class="mt-1 text-indigo-800">ระบบจะพาไปหน้าชำระเงินของ Stripe รองรับบัตรเครดิตและ PromptPay ไม่มีการตัดเงินจริง</p>
+<p class="mt-2 text-xs text-indigo-700">บัตรทดสอบ: <b class="font-mono">4242 4242 4242 4242</b> วันหมดอายุใดก็ได้ในอนาคต CVC 3 หลักใดก็ได้</p>
+</div>
+<p class="hidden rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900" id="stripe-canceled">ยกเลิกการชำระเงินที่ Stripe แล้ว ที่นั่งยังถูกล็อกไว้ให้ กดชำระเงินอีกครั้งได้</p>
 <!-- Actions -->
 <div class="pt-4 mt-2 border-t border-slate-100">
 <button class="w-full bg-primary hover:bg-primary-hover text-white text-lg font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-primary/30 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 group" id="confirm-payment-btn">
-<span>ยืนยันชำระเงิน</span>
+<span id="confirm-payment-label">ยืนยันชำระเงิน</span>
 <span class="bg-white/20 px-2 py-0.5 rounded text-sm group-hover:bg-white/30 transition-colors" id="confirm-payment-total">฿520.00</span>
 </button>
 <p class="text-center text-xs text-slate-400 mt-4">
@@ -304,25 +313,31 @@
 </section>
 </div>
 </main>
+<div class="lg:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 px-4 pt-3" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+<div class="max-w-xl mx-auto flex items-center gap-3">
+<div class="min-w-0 flex-1">
+<p class="text-xs text-slate-500">ยอดชำระสุทธิ</p>
+<p class="text-lg font-black text-slate-900 leading-tight" id="mobile-checkout-total">-</p>
+</div>
+<button class="bg-primary text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-primary/30 disabled:opacity-50" id="mobile-checkout-btn" type="button">ชำระเงิน</button>
+</div>
+</div>
+<style>@media (max-width: 1023px) { body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); } }</style>
 <script>
-    (() => {
+    (async () => {
         const DRAFT_KEY = 'cinema.checkoutDraft';
-        const COUNTDOWN_KEY = 'cinema.checkoutCountdownEndsAt';
-        const USED_PROMOS_KEY = 'cinema.usedPromoCodesByUid';
-        const COUNTDOWN_DURATION_MS = 12 * 60 * 1000;
-        const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const API_BASE = window.location.protocol === 'file:' || (isLocalHost && window.location.port !== '4316')
-            ? 'http://localhost:4316'
-            : '';
-        const draftRaw = localStorage.getItem(DRAFT_KEY);
+        const api = window.cinemaApi;
+        const params = new URLSearchParams(window.location.search);
+        let draft = {};
+        try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}') || {}; } catch (_error) { draft = {}; }
+        const bookingId = params.get('bookingId') || draft.bookingId;
 
-        if (!draftRaw) {
+        if (!bookingId) {
             alert('ไม่พบข้อมูลที่นั่งที่เลือก กรุณาเลือกที่นั่งใหม่');
-            window.location.href = 'seat-selection.html';
+            window.location.href = 'movies.html';
             return;
         }
 
-        const draft = JSON.parse(draftRaw);
         let activePromoCode = draft.promoCode || '';
         let usePoints = Boolean(draft.usePoints);
         let selectedPaymentMethod = draft.paymentMethod || 'card';
@@ -346,7 +361,6 @@
         const cardCvvInput = document.getElementById('card-cvv');
         const ewalletProviderInput = document.getElementById('ewallet-provider');
         const ewalletPhoneInput = document.getElementById('ewallet-phone');
-
         const summaryMoviePoster = document.getElementById('summary-movie-poster');
         const summaryMovieTitle = document.getElementById('summary-movie-title');
         const summaryFormat = document.getElementById('summary-format');
@@ -365,93 +379,75 @@
         const confirmPaymentTotal = document.getElementById('confirm-payment-total');
         const editOrderBtn = document.getElementById('edit-order-btn');
         const countdownTimer = document.getElementById('checkout-timer');
-        const uid = localStorage.getItem('cinema.uid');
-
         let lastPreview = null;
+        let booking = null;
+        let expired = false;
 
-        function getUsedPromoMap() {
-            try {
-                const raw = localStorage.getItem(USED_PROMOS_KEY);
-                const parsed = raw ? JSON.parse(raw) : {};
-                return parsed && typeof parsed === 'object' ? parsed : {};
-            } catch {
-                return {};
+        function goBackToSeats(message) {
+            if (message) alert(message);
+            localStorage.removeItem(DRAFT_KEY);
+            const showtimeId = booking?.showtimeId || draft.showtimeId;
+            window.location.href = showtimeId ? `seat-selection.html?showtimeId=${encodeURIComponent(showtimeId)}` : 'movies.html';
+        }
+
+        try {
+            booking = await api.request(`/api/bookings/${encodeURIComponent(bookingId)}`);
+        } catch (error) {
+            if (error.status === 401) {
+                window.authModule?.requireLogin?.(() => window.location.reload());
+                return;
             }
+            goBackToSeats(error.message);
+            return;
+        }
+        if (booking.status === 'paid' || booking.status === 'used') {
+            window.location.href = `booking-confirmation.html?bookingId=${encodeURIComponent(booking.bookingId)}`;
+            return;
+        }
+        if (booking.status !== 'pending') {
+            goBackToSeats(booking.status === 'expired' ? 'หมดเวลาชำระเงิน กรุณาเลือกที่นั่งใหม่อีกครั้ง' : 'การจองนี้ถูกยกเลิกแล้ว กรุณาเลือกที่นั่งใหม่');
+            return;
         }
 
-        function getUsedPromoSet() {
-            if (!uid) return new Set();
-            const usedByUid = getUsedPromoMap();
-            const list = Array.isArray(usedByUid[uid]) ? usedByUid[uid] : [];
-            return new Set(list.map((code) => String(code).trim().toUpperCase()).filter(Boolean));
+        let stripeEnabled = false;
+        try {
+            stripeEnabled = Boolean((await api.request('/api/pricing', { auth: false })).payments?.stripe);
+        } catch (_error) {
         }
-
-        function markPromoCodeUsed(code) {
-            const normalized = String(code || '').trim().toUpperCase();
-            if (!uid || !normalized) return;
-            const usedByUid = getUsedPromoMap();
-            const current = new Set(Array.isArray(usedByUid[uid]) ? usedByUid[uid] : []);
-            current.add(normalized);
-            usedByUid[uid] = Array.from(current);
-            localStorage.setItem(USED_PROMOS_KEY, JSON.stringify(usedByUid));
-        }
-
-        function isPromoCodeLocallyUsed(code) {
-            const normalized = String(code || '').trim().toUpperCase();
-            if (!normalized) return false;
-            return getUsedPromoSet().has(normalized);
+        if (stripeEnabled) {
+            // Card / PromptPay details are entered on Stripe's own page.
+            paymentTabs[0]?.parentElement?.classList.add('hidden');
+            Object.values(paymentPanels).forEach((panel) => panel?.classList.add('hidden'));
+            document.getElementById('stripe-panel').classList.remove('hidden');
+            document.getElementById('confirm-payment-label').textContent = 'ไปชำระเงินกับ Stripe';
+            if (params.get('canceled')) document.getElementById('stripe-canceled').classList.remove('hidden');
         }
 
         function formatCountdown(msLeft) {
-            const safeMs = Math.max(msLeft, 0);
-            const totalSeconds = Math.floor(safeMs / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const totalSeconds = Math.floor(Math.max(msLeft, 0) / 1000);
+            return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
         }
 
+        // The seats are locked on the server until holdExpiresAt.
         function startCheckoutCountdown() {
-            if (!countdownTimer) return;
-
-            const now = Date.now();
-            let endsAt = Number(localStorage.getItem(COUNTDOWN_KEY));
-
-            if (!endsAt || Number.isNaN(endsAt) || endsAt <= now) {
-                endsAt = now + COUNTDOWN_DURATION_MS;
-                localStorage.setItem(COUNTDOWN_KEY, String(endsAt));
-            }
-
+            const endsAt = Date.parse(booking.holdExpiresAt);
             const tick = () => {
                 const remainingMs = endsAt - Date.now();
-                countdownTimer.textContent = formatCountdown(remainingMs);
-
-                if (remainingMs <= 0) {
-                    localStorage.removeItem(COUNTDOWN_KEY);
-                    localStorage.removeItem(DRAFT_KEY);
-                    alert('หมดเวลาชำระเงิน กรุณาเลือกที่นั่งใหม่อีกครั้ง');
-                    window.location.href = 'seat-selection.html';
+                if (countdownTimer) countdownTimer.textContent = formatCountdown(remainingMs);
+                if (remainingMs <= 0 && !expired) {
+                    expired = true;
+                    clearInterval(timerId);
+                    goBackToSeats('หมดเวลาชำระเงิน ระบบคืนที่นั่งแล้ว กรุณาเลือกที่นั่งใหม่อีกครั้ง');
                 }
             };
-
+            const timerId = setInterval(tick, 1000);
             tick();
-            const timerId = setInterval(() => {
-                const remainingMs = endsAt - Date.now();
-                if (remainingMs <= 0) {
-                    clearInterval(timerId);
-                }
-                tick();
-            }, 1000);
         }
 
         function updateActiveCodeUI() {
             const code = String(activePromoCode || '').trim().toUpperCase();
             if (!activeCodeBanner || !activeCodeText) return;
-            if (!code) {
-                activeCodeBanner.classList.add('hidden');
-                activeCodeText.textContent = '';
-                return;
-            }
-            activeCodeBanner.classList.remove('hidden');
+            activeCodeBanner.classList.toggle('hidden', !code);
             activeCodeText.textContent = code;
         }
 
@@ -460,9 +456,7 @@
         }
 
         function persistDraft() {
-            draft.promoCode = activePromoCode;
-            draft.usePoints = usePoints;
-            draft.paymentMethod = selectedPaymentMethod;
+            draft = { ...draft, bookingId, showtimeId: booking.showtimeId, promoCode: activePromoCode, usePoints, paymentMethod: selectedPaymentMethod };
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
         }
 
@@ -476,78 +470,24 @@
                 tab.classList.toggle('text-slate-600', !isActive);
             });
             Object.entries(paymentPanels).forEach(([key, panel]) => {
-                if (!panel) return;
-                panel.classList.toggle('hidden', key !== nextMethod);
+                if (panel) panel.classList.toggle('hidden', stripeEnabled || key !== nextMethod);
             });
             persistDraft();
-        }
-
-        function findMovieIdByTitle(title) {
-            if (!title || typeof moviesDatabase === 'undefined') return null;
-            const normalized = String(title).trim().toLowerCase();
-            const entry = Object.values(moviesDatabase).find((movieItem) => {
-                const thai = String(movieItem.titleThai || '').trim().toLowerCase();
-                const eng = String(movieItem.titleEng || '').trim().toLowerCase();
-                return thai === normalized || eng === normalized;
-            });
-            return entry?.id || null;
-        }
-
-        function getMovieFromPreview(movie, showtime) {
-            if (typeof moviesDatabase === 'undefined') return null;
-            const idByShowtime = showtime?.movieId;
-            if (idByShowtime && moviesDatabase[idByShowtime]) return moviesDatabase[idByShowtime];
-            const idByTitle = findMovieIdByTitle(movie?.title);
-            return idByTitle ? moviesDatabase[idByTitle] : null;
-        }
-
-        function getFallbackPoster(movieRef, movieId) {
-            if (movieRef) return movieRef.backdropImage || movieRef.trailerImage;
-            if (movieId) return `https://picsum.photos/seed/${encodeURIComponent(movieId)}-poster/500/750`;
-            return 'https://picsum.photos/seed/movie-fallback/500/750';
-        }
-
-        async function fetchPreview() {
-            const response = await fetch(`${API_BASE}/api/checkout/preview`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    showtimeId: draft.showtimeId,
-                    seats: draft.seats,
-                    promoCode: activePromoCode,
-                    usePoints,
-                    uid: uid || null
-                })
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.message || 'Preview failed');
-            }
-
-            return response.json();
         }
 
         function renderPreview(data) {
             lastPreview = data;
             const { movie, showtime, seats, pricing } = data;
             const loyalty = data.loyalty || { availablePoints: 0, canUsePoints: false, pointsRequired: 80, pointsDiscount: 30 };
-
-            const mappedMovie = getMovieFromPreview(movie, showtime);
-            const mappedMovieId = mappedMovie?.id || showtime?.movieId || findMovieIdByTitle(movie?.title);
+            const movieRef = typeof moviesDatabase !== 'undefined' ? moviesDatabase[movie.id] : null;
 
             if (summaryMoviePoster) {
-                summaryMoviePoster.src = getFallbackPoster(mappedMovie, mappedMovieId);
+                summaryMoviePoster.src = movie.poster || movieRef?.backdropImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id || 'movie')}-poster/500/750`;
                 summaryMoviePoster.alt = `Movie poster for ${movie.title}`;
-
-                if (mappedMovie && window.cinemaMovieImages?.getRealMoviePoster) {
-                    window.cinemaMovieImages.getRealMoviePoster(mappedMovie).then((posterUrl) => {
-                        if (posterUrl) {
-                            summaryMoviePoster.src = posterUrl;
-                        }
+                if (movieRef && !movieRef.posterImage && window.cinemaMovieImages?.getRealMoviePoster) {
+                    window.cinemaMovieImages.getRealMoviePoster(movieRef).then((posterUrl) => {
+                        if (posterUrl) summaryMoviePoster.src = posterUrl;
                     }).catch(() => {});
-                } else if (movie.poster) {
-                    summaryMoviePoster.src = movie.poster;
                 }
             }
             summaryMovieTitle.textContent = movie.title;
@@ -564,12 +504,13 @@
             summaryDiscount.textContent = `-${formatMoney(pricing.discount)}`;
             summaryTotal.textContent = formatMoney(pricing.total);
             confirmPaymentTotal.textContent = formatMoney(pricing.total);
+            document.getElementById('mobile-checkout-total').textContent = formatMoney(pricing.total);
 
             if (pointsAvailable) {
                 pointsAvailable.textContent = `คะแนนคงเหลือ: ${Number(loyalty.availablePoints || 0).toLocaleString('th-TH')} คะแนน`;
             }
             if (pointsHint) {
-                pointsHint.textContent = `ใช้ ${loyalty.pointsRequired || 80} คะแนน ลด ${formatMoney(loyalty.pointsDiscount || 30)}`;
+                pointsHint.textContent = `ใช้ ${loyalty.pointsRequired} คะแนน ลด ${formatMoney(loyalty.pointsDiscount)}`;
             }
             if (usePointsCheckbox) {
                 usePointsCheckbox.disabled = !loyalty.canUsePoints;
@@ -579,17 +520,24 @@
                     persistDraft();
                 }
             }
-
             updateActiveCodeUI();
         }
 
         async function refreshPreview() {
+            confirmPaymentBtn.disabled = true;
             try {
-                confirmPaymentBtn.disabled = true;
-                const data = await fetchPreview();
-                renderPreview(data);
+                renderPreview(await api.request(`/api/bookings/${encodeURIComponent(bookingId)}/preview`, {
+                    method: 'POST',
+                    body: { promoCode: activePromoCode, usePoints }
+                }));
+                return true;
             } catch (error) {
+                if (error.status === 409) {
+                    goBackToSeats(error.message);
+                    return false;
+                }
                 alert(error.message || 'ไม่สามารถคำนวณราคาได้');
+                return false;
             } finally {
                 confirmPaymentBtn.disabled = false;
             }
@@ -601,44 +549,33 @@
                 const name = String(cardNameInput?.value || '').trim();
                 const expiry = String(cardExpiryInput?.value || '').trim();
                 const cvv = String(cardCvvInput?.value || '').trim();
-                if (digits.length < 12 || !name || !/^\d{2}\/\d{2}$/.test(expiry) || !/^\d{3,4}$/.test(cvv)) {
-                    return false;
-                }
+                if (digits.length < 12 || !name || !/^\d{2}\/\d{2}$/.test(expiry) || !/^\d{3,4}$/.test(cvv)) return false;
             }
-
             if (selectedPaymentMethod === 'ewallet') {
                 const provider = String(ewalletProviderInput?.value || '').trim();
                 const phone = String(ewalletPhoneInput?.value || '').replace(/\D/g, '');
-                if (!provider || phone.length !== 10) {
-                    return false;
-                }
+                if (!provider || phone.length !== 10) return false;
             }
-
             return true;
         }
 
-        applyPromoBtn.addEventListener('click', async () => {
-            const requestedCode = promoInput.value.trim().toUpperCase();
-            if (requestedCode && isPromoCodeLocallyUsed(requestedCode)) {
-                alert('โค้ดนี้ถูกใช้ไปแล้ว');
-                return;
+        async function applyPromo() {
+            const previousCode = activePromoCode;
+            activePromoCode = promoInput.value.trim().toUpperCase();
+            const ok = await refreshPreview();
+            if (!ok) {
+                activePromoCode = previousCode;
+                promoInput.value = previousCode;
+                await refreshPreview();
             }
-            activePromoCode = requestedCode;
             persistDraft();
-            await refreshPreview();
-        });
+        }
 
-        promoInput.addEventListener('keydown', async (event) => {
+        applyPromoBtn.addEventListener('click', applyPromo);
+        promoInput.addEventListener('keydown', (event) => {
             if (event.key !== 'Enter') return;
             event.preventDefault();
-            const requestedCode = promoInput.value.trim().toUpperCase();
-            if (requestedCode && isPromoCodeLocallyUsed(requestedCode)) {
-                alert('โค้ดนี้ถูกใช้ไปแล้ว');
-                return;
-            }
-            activePromoCode = requestedCode;
-            persistDraft();
-            await refreshPreview();
+            applyPromo();
         });
 
         if (usePointsCheckbox) {
@@ -650,24 +587,16 @@
             });
         }
 
-        paymentTabs.forEach((tab) => {
-            tab.addEventListener('click', () => {
-                setPaymentMethod(tab.dataset.method);
-            });
-        });
+        paymentTabs.forEach((tab) => tab.addEventListener('click', () => setPaymentMethod(tab.dataset.method)));
 
         cardNumberInput?.addEventListener('input', () => {
             const digits = cardNumberInput.value.replace(/\D/g, '').slice(0, 16);
             cardNumberInput.value = digits.replace(/(.{4})/g, '$1 ').trim();
         });
-
         cardExpiryInput?.addEventListener('input', () => {
             const digits = cardExpiryInput.value.replace(/\D/g, '').slice(0, 4);
-            cardExpiryInput.value = digits.length > 2
-                ? `${digits.slice(0, 2)}/${digits.slice(2)}`
-                : digits;
+            cardExpiryInput.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
         });
-
         ewalletPhoneInput?.addEventListener('input', () => {
             ewalletPhoneInput.value = ewalletPhoneInput.value.replace(/\D/g, '').slice(0, 10);
         });
@@ -677,50 +606,53 @@
                 alert('ยังไม่พร้อมชำระเงิน');
                 return;
             }
-
-            if (!validatePaymentForm()) {
+            if (!stripeEnabled && !validatePaymentForm()) {
                 alert('ข้อมูลการชำระเงินไม่ถูกต้อง');
                 return;
             }
-
+            confirmPaymentBtn.disabled = true;
+            if (stripeEnabled) {
+                try {
+                    const result = await api.request(`/api/bookings/${encodeURIComponent(bookingId)}/stripe-checkout`, {
+                        method: 'POST',
+                        body: { promoCode: activePromoCode, usePoints }
+                    });
+                    expired = true; // leaving the page: stop the countdown redirect
+                    if (result.url) {
+                        window.location.href = result.url;
+                    } else {
+                        localStorage.removeItem(DRAFT_KEY);
+                        window.location.href = `booking-confirmation.html?bookingId=${encodeURIComponent(bookingId)}`;
+                    }
+                } catch (error) {
+                    confirmPaymentBtn.disabled = false;
+                    if (error.status === 409) {
+                        goBackToSeats(error.message);
+                        return;
+                    }
+                    alert(error.message || 'เปิดหน้าชำระเงินไม่สำเร็จ');
+                }
+                return;
+            }
             try {
-                confirmPaymentBtn.disabled = true;
                 const cardDigits = String(cardNumberInput?.value || '').replace(/\D/g, '');
-                const codeBeforeBooking = String(activePromoCode || '').trim().toUpperCase();
-                
-                const response = await fetch(`${API_BASE}/api/bookings`, {
+                const paid = await api.request(`/api/bookings/${encodeURIComponent(bookingId)}/pay`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        showtimeId: draft.showtimeId,
-                        seats: draft.seats,
+                    body: {
                         promoCode: activePromoCode,
                         usePoints,
                         paymentMethod: selectedPaymentMethod,
-                        cardLast4: selectedPaymentMethod === 'card' && cardDigits.length >= 4
-                            ? cardDigits.slice(-4)
-                            : '0000',
-                        uid: uid || null
-                    })
+                        cardLast4: selectedPaymentMethod === 'card' ? cardDigits.slice(-4) : null
+                    }
                 });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.message || 'ชำระเงินไม่สำเร็จ');
-                }
-
-                const booking = await response.json();
-                if (codeBeforeBooking) {
-                    markPromoCodeUsed(codeBeforeBooking);
-                }
-                localStorage.setItem('cinema.latestBookingId', booking.bookingId);
+                expired = true; // stop the countdown redirect
+                localStorage.setItem('cinema.latestBookingId', paid.bookingId);
                 localStorage.removeItem(DRAFT_KEY);
-                localStorage.removeItem(COUNTDOWN_KEY);
-                window.location.href = `booking-confirmation.html?bookingId=${encodeURIComponent(booking.bookingId)}`;
+                window.location.href = `booking-confirmation.html?bookingId=${encodeURIComponent(paid.bookingId)}`;
             } catch (error) {
-                if (String(error?.message || '').includes('โค้ดนี้ถูกใช้ไปแล้ว')) {
-                    const usedCode = String(activePromoCode || '').trim().toUpperCase();
-                    markPromoCodeUsed(usedCode);
+                if (error.status === 409) {
+                    goBackToSeats(error.message);
+                    return;
                 }
                 alert(error.message || 'ชำระเงินไม่สำเร็จ');
             } finally {
@@ -728,12 +660,27 @@
             }
         });
 
+        editOrderBtn.addEventListener('click', async () => {
+            expired = true;
+            try {
+                await api.request(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`, { method: 'POST' });
+            } catch (_error) {
+            }
+            goBackToSeats();
+        });
+
+        const mobileCheckoutBtn = document.getElementById('mobile-checkout-btn');
+        mobileCheckoutBtn.textContent = stripeEnabled ? 'ไปชำระเงิน' : 'ยืนยันชำระเงิน';
+        mobileCheckoutBtn.addEventListener('click', () => {
+            if (!stripeEnabled) {
+                // simulated payment needs the card / e-wallet form, which is above
+                document.getElementById('confirm-payment-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            confirmPaymentBtn.click();
+        });
+
         promoInput.value = activePromoCode;
         setPaymentMethod(selectedPaymentMethod);
-        editOrderBtn.addEventListener('click', () => {
-            localStorage.removeItem(COUNTDOWN_KEY);
-            window.location.href = `seat-selection.html?showtimeId=${encodeURIComponent(draft.showtimeId)}`;
-        });
         updateActiveCodeUI();
         startCheckoutCountdown();
         refreshPreview();
@@ -822,20 +769,9 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
+    import { app, firebaseConfig } from './firebase-init.js';
     import { initializeAuthUI } from './auth.js';
 
-    const firebaseConfig = {
-        apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-        authDomain: 'frame-4e170.firebaseapp.com',
-        projectId: 'frame-4e170',
-        storageBucket: 'frame-4e170.firebasestorage.app',
-        messagingSenderId: '585102075629',
-        appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-        measurementId: 'G-0TCR1Y4LP2'
-    };
-
-    const app = initializeApp(firebaseConfig);
     initializeAuthUI(app, firebaseConfig);
 </script>
 </body></html>

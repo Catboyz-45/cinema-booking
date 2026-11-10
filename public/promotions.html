@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script src="cinema-api.js"></script>
+<script src="site-ui.js"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { primary: '#e9508c', 'background-light': '#f8f6f7' } } } };
   </script>
@@ -118,37 +120,53 @@
   </footer>
 
   <script>
-    (() => {
+    (async () => {
+      const api = window.cinemaApi;
+      const esc = api.escapeHtml;
       const searchInput = document.getElementById('page-search-input');
-      const items = Array.from(document.querySelectorAll('.promotion-item'));
+      const list = document.getElementById('promotion-list');
       const memberPoints = document.getElementById('member-points');
-      const storedUid = localStorage.getItem('cinema.uid') || '';
-      const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const apiBase = "https://api-a2dyr3baya-as.a.run.app";
+      const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
 
-
-      if (!searchInput) return;
-
-      if (memberPoints && storedUid) {
-        fetch(`${apiBase}/api/users/${encodeURIComponent(storedUid)}`)
-          .then((response) => response.ok ? response.json() : null)
-          .then((profile) => {
-            const points = Number(profile?.loyaltyPoints || 0);
-            memberPoints.textContent = `${points.toLocaleString('th-TH')} คะแนน`;
-          })
-          .catch(() => {
-            memberPoints.textContent = '0 คะแนน';
-          });
+      // Promo codes managed in the admin page.
+      try {
+        const promos = await api.request('/api/promotions', { auth: false });
+        if (list && promos.length) {
+          list.insertAdjacentHTML('afterbegin', promos.map((promo) => {
+            const discount = promo.discountType === 'percent' ? `ลด ${promo.discountValue}%` : `ลด ${Number(promo.discountValue).toLocaleString('th-TH')} บาท`;
+            const days = promo.daysOfWeek?.length ? `ใช้ได้วัน${promo.daysOfWeek.map((d) => DAY_NAMES[d]).join(', ')}` : 'ใช้ได้ทุกวัน';
+            const until = promo.endDate ? ` • ถึง ${api.formatThaiDate(promo.endDate, { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
+            return `<div class="rounded-xl border-2 border-primary/30 bg-white p-5 promotion-item">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="font-bold text-slate-900">${esc(discount)}</h3>
+                <span class="font-mono font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">${esc(promo.code)}</span>
+              </div>
+              <p class="text-sm text-slate-600 mt-2">${esc(promo.description || '')}</p>
+              <p class="text-xs text-slate-500 mt-2">${esc(days + until)} • กรอกโค้ดในหน้าชำระเงิน</p>
+            </div>`;
+          }).join(''));
+        }
+      } catch (_error) {
       }
 
+      api.onAuthChange(async (user) => {
+        if (!memberPoints || !user) return;
+        try {
+          const profile = await api.request('/api/me');
+          memberPoints.textContent = `${Number(profile.loyaltyPoints || 0).toLocaleString('th-TH')} คะแนน`;
+        } catch (_error) {
+          memberPoints.textContent = '0 คะแนน';
+        }
+      });
+
+      if (!searchInput) return;
       searchInput.addEventListener('input', () => {
         const keyword = searchInput.value.trim().toLowerCase();
-        items.forEach((item) => {
+        document.querySelectorAll('.promotion-item').forEach((item) => {
           const text = item.textContent.toLowerCase();
           item.style.display = keyword === '' || text.includes(keyword) ? '' : 'none';
         });
       });
-
     })();
   </script>
 
@@ -215,21 +233,10 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js';
+    import { app, firebaseConfig } from './firebase-init.js';
     import { initializeAuthUI } from './auth.js';
 
-    const firebaseConfig = {
-      apiKey: 'AIzaSyC0I4lXYHrxh1543AF1NZcdAYulS2jbftM',
-      authDomain: 'frame-4e170.firebaseapp.com',
-      projectId: 'frame-4e170',
-      storageBucket: 'frame-4e170.firebasestorage.app',
-      messagingSenderId: '585102075629',
-      appId: '1:585102075629:web:f5c9d3e3745b8a35570ee4',
-      measurementId: 'G-0TCR1Y4LP2'
-    };
-
-    const app = initializeApp(firebaseConfig);
     initializeAuthUI(app, firebaseConfig);
-  </script>
+</script>
 </body>
 </html>
