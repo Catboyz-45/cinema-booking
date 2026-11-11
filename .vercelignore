@@ -1,0 +1,13 @@
+# Never upload secrets or local state to Vercel (CLI deploys read this, not .gitignore)
+.env
+.env.*
+**/.env
+**/.env.*
+*-service-account.json
+firebase-service-account.json
+node_modules
+functions/node_modules
+.firebase
+*.log
+.git
+.DS_Store

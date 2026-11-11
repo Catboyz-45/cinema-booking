@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["sin1"],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api" }
+  ],
+  "crons": [
+    { "path": "/api/cron/release-holds", "schedule": "0 20 * * *" }
+  ]
+}

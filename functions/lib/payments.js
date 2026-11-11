@@ -14,6 +14,7 @@ const MIN_THB_CHARGE = 10; // Stripe's minimum charge in THB
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://my-web-project-491413.web.app",
   "https://my-web-project-491413.firebaseapp.com",
+  "https://cinema-booking-02739322.vercel.app",
 ];
 
 function createPayments({ secretKey = process.env.STRIPE_SECRET_KEY, allowedOrigins = process.env.ALLOWED_ORIGINS } = {}) {

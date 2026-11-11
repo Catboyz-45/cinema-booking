@@ -8,7 +8,10 @@
 
 Cinema Booking ช่วยให้ผู้ใช้ค้นหาภาพยนตร์ ดูรายละเอียดและรอบฉาย เลือกที่นั่ง ตรวจสอบราคา และยืนยันการจองได้ภายในเว็บไซต์เดียว นอกจากนี้ยังมีระบบสมาชิก คะแนนสะสม โปรโมชั่น หน้าตรวจสอบประวัติการจอง และระบบหลังบ้านสำหรับผู้ดูแลระบบ
 
-โปรเจกต์นี้แสดงการประยุกต์ใช้ Firebase Authentication และ Cloud Firestore ร่วมกับ REST API บน Express และ Firebase Cloud Functions โดยแยกส่วนหน้าเว็บ ส่วน API และการตั้งค่า deployment ออกจากกันอย่างชัดเจน
+โปรเจกต์นี้แสดงการประยุกต์ใช้ Firebase Authentication และ Cloud Firestore ร่วมกับ REST API บน Express (รันบน Vercel serverless) โดยแยกส่วนหน้าเว็บ ส่วน API และการตั้งค่า deployment ออกจากกันอย่างชัดเจน
+
+- เว็บไซต์: https://my-web-project-491413.web.app
+- API: https://cinema-booking-02739322.vercel.app/api/health
 
 ## บัญชีทดลองสำหรับตรวจงาน
 
@@ -65,7 +68,7 @@ Cinema Booking ช่วยให้ผู้ใช้ค้นหาภาพ�
 | Backend | Node.js, Express |
 | Authentication | Firebase Authentication |
 | Database | Cloud Firestore |
-| Serverless API | Firebase Cloud Functions (HTTP + Scheduler) |
+| Serverless API | Vercel Functions + Vercel Cron (ใช้ Express ชุดเดียวกับ Firebase Cloud Functions) |
 | Payment | Stripe Checkout (Test mode / Sandbox) |
 | Hosting | Firebase Hosting |
 | Runtime | Node.js 22 |
@@ -86,8 +89,10 @@ Cinema Booking ช่วยให้ผู้ใช้ค้นหาภาพ�
 │   ├── cinema-api.js                    # client สำหรับเรียก API พร้อม ID token
 │   ├── auth.js                          # หน้าต่างเข้าสู่ระบบ / สมัครสมาชิก
 │   └── movies-data.js                   # ข้อมูลภาพยนตร์สำรอง (ใช้เมื่อเรียก API ไม่ได้)
+├── api/index.js                         # entry ของ Vercel (ใช้ functions/app.js)
+├── vercel.json                          # route /api/* + cron วันละครั้ง
 ├── functions/
-│   ├── index.js                         # export Cloud Functions (api, releaseExpiredHolds)
+│   ├── index.js                         # export Cloud Functions (ใช้กับ emulator / Blaze plan)
 │   ├── app.js                           # REST API ทั้งหมด (ใช้ร่วมกับ server.js)
 │   ├── lib/domain.js                    # ผังที่นั่ง ราคา ส่วนลด กติกาโปรโมชั่น
 │   ├── lib/store.js                     # transaction: ล็อกที่นั่ง ชำระเงิน คืนเงิน เช็คอิน
@@ -158,23 +163,35 @@ FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/to/service-account.json npm run dev
 
 ## Deploy และตั้งค่าผู้ดูแลระบบ
 
-ทุกส่วน (Authentication, Firestore, Functions, Hosting) อยู่ใน Firebase project **Cinema Booking 02739322** (Project ID `my-web-project-491413`)
+ใช้บริการฟรีทั้งหมด: Authentication, Firestore และ Hosting อยู่ใน Firebase project **Cinema Booking 02739322** (Project ID `my-web-project-491413`, แพ็กเกจ Spark) ส่วน API รันบน Vercel (Hobby) เพราะ Cloud Functions ต้องใช้ Blaze plan
 
-1. สร้างไฟล์ `functions/.env` จาก `functions/.env.example` (ไฟล์นี้ไม่ถูก commit)
+### API บน Vercel
+
+1. สร้าง service account key: Firebase Console → Project settings → Service accounts → Generate new private key (ห้าม commit ไฟล์นี้)
+2. ตั้ง Environment Variables ของโปรเจกต์ Vercel (Production)
+   - `FIREBASE_SERVICE_ACCOUNT` = เนื้อหาไฟล์ service account (JSON หรือ base64)
    - `ADMIN_EMAILS` = อีเมลผู้ดูแลระบบ คั่นหลายอีเมลด้วยจุลภาคได้
-   - `STRIPE_SECRET_KEY` = Secret key ของ Stripe **Sandbox** (ขึ้นต้นด้วย `sk_test_`) จาก Stripe Dashboard → Developers → API keys ระบบไม่ยอมรับ live key
-   - ถ้าไม่ใส่ `STRIPE_SECRET_KEY` ระบบจะกลับไปใช้การชำระเงินแบบจำลอง
-2. Deploy
+   - `STRIPE_SECRET_KEY` = Secret key ของ Stripe **Sandbox** (ขึ้นต้นด้วย `sk_test_`) ระบบไม่ยอมรับ live key ถ้าไม่ใส่จะใช้การชำระเงินแบบจำลอง
+   - `CRON_SECRET` = ข้อความสุ่ม ใช้ป้องกัน `/api/cron/release-holds`
+3. Deploy
 
    ```bash
-   firebase deploy --only hosting,functions,firestore:rules
+   npx vercel deploy --prod
    ```
 
-3. เมื่อแอดมินคนแรกเข้าสู่ระบบ จะให้สิทธิ์คนอื่นเพิ่มได้จากเมนู "ผู้ใช้" ในหน้าแอดมิน
+`.vercelignore` กันไม่ให้ไฟล์ `.env` และ service account ถูกอัปโหลด
 
-ครั้งแรกที่ API ทำงาน ระบบจะ migrate ข้อมูลเดิมให้อัตโนมัติ: สร้างรอบฉายแบบมีวันที่ 7 วันข้างหน้า ซ่อนรอบเก่าที่ไม่มีวันที่ และตั้งสถานะการจองเดิมเป็น "ชำระแล้ว"
+### หน้าเว็บบน Firebase Hosting
 
-ฟังก์ชัน `releaseExpiredHolds` ทำงานทุก 5 นาทีเพื่อปิดการจองที่ไม่ชำระเงิน (ต้องใช้ Blaze plan ซึ่ง Cloud Functions ต้องใช้อยู่แล้ว) ถ้าไม่ได้ deploy ฟังก์ชันนี้ ที่นั่งก็ยังถูกคืนตามเวลาเพราะ API ตรวจเวลาหมดอายุทุกครั้งที่อ่าน
+```bash
+firebase deploy --only hosting,firestore:rules --project my-web-project-491413
+```
+
+หน้าเว็บบน `*.web.app` เรียก API ที่ Vercel (ตั้งไว้ใน `public/cinema-api.js`) เมื่อแอดมินคนแรกเข้าสู่ระบบ จะให้สิทธิ์คนอื่นเพิ่มได้จากเมนู "ผู้ใช้" ในหน้าแอดมิน
+
+ครั้งแรกที่ API ทำงาน ระบบจะ migrate ข้อมูลเดิมให้อัตโนมัติ: สร้างรอบฉายแบบมีวันที่ 7 วันข้างหน้า ซ่อนรอบเก่าที่ไม่มีวันที่ แปลงข้อมูลภาพยนตร์รูปแบบเก่า และตั้งสถานะการจองเดิมเป็น "ชำระแล้ว"
+
+Vercel Cron (แพ็กเกจฟรีรันได้วันละครั้ง) ปิดการจองที่ไม่ชำระเงิน แต่ที่นั่งยังถูกคืนตามเวลาเสมอเพราะ API ตรวจเวลาหมดอายุทุกครั้งที่อ่าน ถ้าเปลี่ยนไปใช้ Blaze plan ก็ deploy `functions/` เป็น Cloud Functions ได้ตามเดิม (`firebase deploy --only functions`)
 
 การส่ง E-Ticket ทางอีเมลต้องติดตั้ง Firebase Extension **Trigger Email** (ตั้ง collection เป็น `mail` และตั้งค่า SMTP) ถ้ายังไม่ติดตั้ง ระบบจะเก็บอีเมลไว้ใน collection `mail` เฉย ๆ
 
@@ -187,7 +204,7 @@ FIREBASE_SERVICE_ACCOUNT_PATH=/absolute/path/to/service-account.json npm run dev
 
 ## แนวทางพัฒนาต่อ
 
-- เพิ่ม Stripe webhook เพื่อยืนยันการชำระเงินทันทีแม้ลูกค้าปิดหน้าเว็บ (ตอนนี้ระบบตรวจซ้ำทุก 5 นาที)
+- เพิ่ม Stripe webhook เพื่อยืนยันการชำระเงินทันทีแม้ลูกค้าปิดหน้าเว็บ (ตอนนี้ระบบตรวจตอนลูกค้ากลับมาหน้าเว็บและตอน cron รัน)
 - กำหนดผังที่นั่งแยกตามโรงย่อย
 - เพิ่ม rate limiting และจำกัด CORS ให้รับเฉพาะโดเมนของเว็บไซต์
 - เพิ่ม CI สำหรับรัน `npm test`

@@ -26,3 +26,4 @@ ui-debug.log
 *.log
 coverage/
 dist/
+.vercel

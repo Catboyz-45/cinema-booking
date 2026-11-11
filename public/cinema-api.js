@@ -2,10 +2,14 @@
 //   await cinemaApi.request('/api/me')                 → sends the Firebase ID token when signed in
 //   await cinemaApi.catalog()                          → movies + dated showtimes from the server
 (function () {
-    const PRODUCTION_API = 'https://api-a2dyr3baya-as.a.run.app';
+    // The API runs on Vercel (api/index.js). Firebase Hosting serves only the pages, so
+    // pages opened from *.web.app / *.firebaseapp.com (or file:) call the Vercel URL;
+    // the Vercel copy of the site and the local emulators use the same-origin /api.
+    const PRODUCTION_API = 'https://cinema-booking-02739322.vercel.app';
+    const onFirebaseHosting = /\.(web\.app|firebaseapp\.com)$/.test(window.location.hostname);
     const base = typeof window.CINEMA_API_BASE === 'string'
         ? window.CINEMA_API_BASE
-        : (window.location.protocol === 'file:' ? PRODUCTION_API : '');
+        : (window.location.protocol === 'file:' || onFirebaseHosting ? PRODUCTION_API : '');
 
     let auth = null;
     let resolveAuthReady;

@@ -2,6 +2,7 @@
  * One-time data setup / migration, tracked by meta/seed.version.
  *  v2: movies without embedded showtimes, dated showtimes for the next 7 days,
  *      cinemas, pricing settings, promotions, and v1 bookings marked as paid.
+ *  v3: v1 movie docs that only had title/poster get titleThai/titleEng/backdropImage.
  */
 const {
   todayInBangkok,
@@ -14,7 +15,7 @@ const {
 } = require("./util");
 const { DEFAULT_PRICING, DEFAULT_PROMOTIONS } = require("./domain");
 
-const SEED_VERSION = 2;
+const SEED_VERSION = 3;
 
 // Garbled synopses from the first version of the sample data → replaced by the text in data/movies-data.js.
 const GARBLED_DESCRIPTIONS = {
@@ -140,6 +141,24 @@ async function runSeed(firestore, { logger = console } = {}) {
     const patch = {};
     if (GARBLED_DESCRIPTIONS[doc.id] && data.description === GARBLED_DESCRIPTIONS[doc.id] && catalog[doc.id]?.description) {
       patch.description = catalog[doc.id].description;
+    }
+    if (!data.titleThai) {
+      const source = catalog[doc.id];
+      if (source) {
+        const { showtimes: _showtimes, duration: _duration, ...fields } = source;
+        Object.assign(patch, fields);
+      } else {
+        const title = data.title || doc.id;
+        Object.assign(patch, {
+          titleThai: title,
+          titleEng: data.titleEng || title,
+          backdropImage: data.backdropImage || data.poster || "",
+          trailerImage: data.trailerImage || data.poster || "",
+          description: data.description || "",
+          genres: Array.isArray(data.genres) ? data.genres : [],
+          cast: Array.isArray(data.cast) ? data.cast : [],
+        });
+      }
     }
     if (!data.status) patch.status = "now_showing";
     if (!data.durationMinutes) patch.durationMinutes = parseDurationMinutes(data.duration);
