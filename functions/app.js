@@ -5,6 +5,7 @@
  * Customer:  /api/me, /api/me/bookings, /api/bookings/hold, /api/bookings/:id/(preview|pay|cancel)
  * Admin:     /api/admin/...  (requires users/{uid}.role === "admin")
  */
+const crypto = require("crypto");
 const express = require("express");
 const cors = require("cors");
 const { createStore, readSeatState, effectiveStatus, presentBooking, movieTitle } = require("./lib/store");
@@ -51,6 +52,21 @@ function isHttpsUrl(value) {
   return value === "" || /^https:\/\/[^\s"'<>]+$/i.test(value);
 }
 
+// Movie images: any https URL, or an image uploaded to this API on a local dev server.
+function isImageUrl(value) {
+  return isHttpsUrl(value) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/api\/images\/[A-Za-z0-9_-]+$/i.test(value);
+}
+
+// ---- uploaded images (stored in Firestore, served by GET /api/images/:id) ----
+const MAX_IMAGE_BYTES = 700 * 1024; // the admin page shrinks photos before upload
+const IMAGE_SIGNATURES = {
+  "image/jpeg": (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  "image/png": (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "image/webp": (b) => b.subarray(0, 4).toString("latin1") === "RIFF" && b.subarray(8, 12).toString("latin1") === "WEBP",
+};
+const IMAGE_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
+const uploadedImageId = (url) => (/\/api\/images\/([A-Za-z0-9_-]{16,64})$/.exec(String(url || "")) || [])[1] || null;
+
 function createApp({ firestore, verifyIdToken, payments = null, adminEmails = process.env.ADMIN_EMAILS, logger = console }) {
   const app = express();
   const store = createStore(firestore, { payments });
@@ -58,7 +74,9 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
   const bootstrapAdmins = parseAdminEmails(adminEmails);
 
   app.use(cors({ origin: true }));
-  app.use(express.json({ limit: "200kb" }));
+  const jsonSmall = express.json({ limit: "200kb" });
+  const jsonImage = express.json({ limit: "1mb" }); // base64 of an image up to MAX_IMAGE_BYTES
+  app.use((req, res, next) => (req.path === "/api/admin/images" ? jsonImage : jsonSmall)(req, res, next));
 
   // ---- one-time seed / migration (runs on the first request of an instance) ----
   let seedPromise = null;
@@ -192,6 +210,21 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
   api.use(authenticate);
 
   api.get("/health", (_req, res) => res.json({ ok: true, message: "Cinema API running" }));
+
+  api.get("/images/:imageId", asyncHandler(async (req, res) => {
+    const id = String(req.params.imageId);
+    if (!IMAGE_ID_PATTERN.test(id)) throw new HttpError(404, "ไม่พบรูปภาพ");
+    const snap = await col("images").doc(id).get();
+    if (!snap.exists) throw new HttpError(404, "ไม่พบรูปภาพ");
+    const { contentType, data } = snap.data();
+    res.set({
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=31536000, immutable", // ids are random and never reused
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'",
+    });
+    res.send(Buffer.from(data));
+  }));
 
   // ---- public catalog ----
   api.get("/catalog", asyncHandler(async (_req, res) => {
@@ -465,7 +498,7 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     if (!Array.isArray(list)) return [];
     return list
       .map((actor) => ({ name: cleanString(actor?.name, 80), role: cleanString(actor?.role, 80), image: cleanString(actor?.image, 500) }))
-      .filter((actor) => actor.name && isHttpsUrl(actor.image))
+      .filter((actor) => actor.name && isImageUrl(actor.image))
       .slice(0, 20);
   }
 
@@ -480,7 +513,7 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     const images = {};
     for (const key of ["posterImage", "backdropImage", "trailerImage"]) {
       const value = cleanString(body[key], 1000);
-      if (!isHttpsUrl(value)) throw new HttpError(400, `ลิงก์รูป ${key} ต้องขึ้นต้นด้วย https://`);
+      if (!isImageUrl(value)) throw new HttpError(400, `ลิงก์รูป ${key} ต้องขึ้นต้นด้วย https://`);
       images[key] = value;
     }
     return {
@@ -498,6 +531,33 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
       cast: parseCast(body.cast),
       status,
     };
+  }
+
+  admin.post("/images", asyncHandler(async (req, res) => {
+    const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(req.body?.dataUrl || ""));
+    if (!match) throw new HttpError(400, "รองรับเฉพาะไฟล์รูป JPG, PNG หรือ WebP");
+    const [, contentType, base64] = match;
+    const data = Buffer.from(base64, "base64");
+    if (!data.length) throw new HttpError(400, "ไฟล์รูปว่างเปล่า");
+    if (data.length > MAX_IMAGE_BYTES) throw new HttpError(413, "รูปใหญ่เกินไป (สูงสุด 700 KB)");
+    if (!IMAGE_SIGNATURES[contentType](data)) throw new HttpError(400, "ไฟล์นี้ไม่ใช่รูปภาพที่ถูกต้อง");
+    const id = crypto.randomBytes(16).toString("base64url");
+    await col("images").doc(id).set({
+      contentType,
+      data,
+      size: data.length,
+      uploadedBy: req.user.uid,
+      createdAt: new Date().toISOString(),
+    });
+    res.status(201).json({ id, path: `/api/images/${id}`, size: data.length });
+  }));
+
+  /** Delete uploaded images that a movie no longer uses (best effort). */
+  const imageUrlsOf = (movie = {}) => [movie.posterImage, movie.backdropImage, movie.trailerImage, ...(movie.cast || []).map((actor) => actor?.image)];
+  async function deleteUnusedImages(oldMovie, newMovie = {}) {
+    const keep = new Set(imageUrlsOf(newMovie).map(uploadedImageId).filter(Boolean));
+    const drop = imageUrlsOf(oldMovie).map(uploadedImageId).filter((id) => id && !keep.has(id));
+    await Promise.all([...new Set(drop)].map((id) => col("images").doc(id).delete().catch(() => {})));
   }
 
   admin.get("/movies", asyncHandler(async (_req, res) => {
@@ -522,13 +582,15 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     if (!snap.exists) throw new HttpError(404, "ไม่พบภาพยนตร์");
     const movie = parseMovieInput(req.body);
     await ref.set({ ...movie, showtimes: null, updatedAt: new Date().toISOString() }, { merge: true });
+    await deleteUnusedImages(snap.data(), movie);
     res.json({ ...snap.data(), ...movie, id: ref.id });
   }));
 
   admin.delete("/movies/:movieId", asyncHandler(async (req, res) => {
     const id = req.params.movieId;
     const ref = col("movies").doc(id);
-    if (!(await ref.get()).exists) throw new HttpError(404, "ไม่พบภาพยนตร์");
+    const movieSnap = await ref.get();
+    if (!movieSnap.exists) throw new HttpError(404, "ไม่พบภาพยนตร์");
     const hasBookings = !(await col("bookings").where("movieId", "==", id).limit(1).get()).empty;
     if (hasBookings) {
       await ref.set({ status: "archived", updatedAt: new Date().toISOString() }, { merge: true });
@@ -542,6 +604,7 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     });
     batch.delete(ref);
     await batch.commit();
+    await deleteUnusedImages(movieSnap.data());
     return res.json({ ok: true, deleted: true, deletedShowtimes: showtimes.size });
   }));
 

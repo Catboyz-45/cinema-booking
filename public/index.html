@@ -3,7 +3,7 @@
 <html lang="th"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Cinema - Home</title>
+<title>Cinema - จองตั๋วหนังออนไลน์</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
@@ -46,46 +46,14 @@
           scrollbar-width: none;  /* Firefox */
         }
     </style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
+<link href="site.css" rel="stylesheet"/>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
 <!-- Header / Navigation -->
-<header class="sticky top-0 z-50 bg-surface/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
-<div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex items-center justify-between h-20 gap-8">
-<!-- Logo & Brand -->
-<a class="text-2xl font-black tracking-tight text-slate-900 shrink-0" href="index.html">Cinema</a>
-<!-- Search Bar -->
-<div class="hidden md:flex flex-1 max-w-md">
-<label class="relative w-full">
-<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-primary">
-<span class="material-symbols-outlined">search</span>
-</div>
-<input class="block w-full p-2.5 pl-10 text-sm text-slate-900 bg-background-light border-none rounded-lg focus:ring-2 focus:ring-primary focus:outline-none placeholder:text-slate-400" id="home-search-input" placeholder="Search movies, cinemas..." type="text"/>
-</label>
-</div>
-<!-- Nav & Profile -->
-<div class="flex items-center gap-6">
-<nav class="hidden lg:flex items-center gap-6">
-<a class="text-primary text-sm font-semibold transition-colors" href="index.html">หน้าแรก</a>
-<a class="text-slate-700 hover:text-primary text-sm font-semibold transition-colors" href="movies.html">ภาพยนตร์</a>
-<a class="text-slate-700 hover:text-primary text-sm font-semibold transition-colors" href="cinemas.html">โรงภาพยนตร์</a>
-<a class="text-slate-700 hover:text-primary text-sm font-semibold transition-colors" href="promotions.html">โปรโมชั่น</a>
-</nav>
-<div class="flex items-center gap-3">
-<!-- Member Points Pill -->
-<div class="hidden sm:flex items-center bg-background-light rounded-full px-4 py-1.5 border border-slate-200">
-<span class="material-symbols-outlined text-primary text-lg mr-2">stars</span>
-<span class="text-sm font-bold text-slate-800" id="member-points">0 คะแนน</span>
-</div>
-<!-- Profile/Login -->
-<button class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-200 hover:bg-slate-300 transition overflow-hidden" id="profile-btn">
-<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6q4FeHiQsMOkQmj95z4EzvVinKOtDV4QriFwJ-QOyxBuFStWbd8c0kj_D_uLRJ6mhM4F3cUHWJ5GRhfSXKrdY-VgnmwK5KrBS7imj4IS7ivi2TmK3w21WLLX4ogiMYQ3aNu1eHT36wlkALUffpQrsaUjif3sNoiT9SS6WHYMUr1HC1HnTWl4PxzYESchpE7NgSo7ELYMd4tPUeUjFSgwGChFzQ7Y6-YZaiuz_wrMBFptDjh4ZutyumxzRzrIQDT0m99Epmo1T99h0" id="profile-img"/>
-</button>
-</div>
-</div>
-</div>
-</div>
-</header>
+<header id="site-header"></header>
+<script>cinemaUi.header({"active": "home", "search": {"id": "home-search-input", "placeholder": "ค้นหาภาพยนตร์"}});</script>
 <main class="flex-grow w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 <!-- Hero Section -->
 <section class="relative w-full rounded-2xl overflow-hidden shadow-lg group">
@@ -112,7 +80,7 @@
 <div class="flex gap-3 mt-2">
 <button class="bg-primary hover:bg-pink-600 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors" id="hero-book-btn">
 <span class="material-symbols-outlined">confirmation_number</span>
-                            จองตั๋วภาพยนตร์
+                            จองตั๋ว
                         </button>
 <button class="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors" id="hero-trailer-btn">
 <span class="material-symbols-outlined">play_circle</span>
@@ -148,126 +116,20 @@
 <div class="flex justify-center pt-4" id="movie-pagination">
 </div>
 </div>
-<!-- Coming Soon Section -->
-<div class="space-y-6 pt-8 pb-12 border-t border-slate-200" id="coming-soon">
+<!-- Coming Soon Section: movies set to "โปรแกรมหน้า" in the admin -->
+<section class="space-y-6 pt-8 pb-12 border-t border-slate-200 scroll-mt-24 hidden" id="coming-soon" aria-labelledby="coming-soon-title">
 <div class="flex items-baseline justify-between">
 <div class="flex items-baseline gap-4">
-<h2 class="text-2xl font-black text-slate-900">โปรแกรมหน้า</h2>
+<h2 class="text-2xl font-black text-slate-900" id="coming-soon-title">โปรแกรมหน้า</h2>
 <span class="text-slate-500 font-medium">Coming Soon</span>
 </div>
 </div>
-<div class="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x">
-<!-- CS Card 1 -->
-<div class="min-w-[160px] md:min-w-[200px] snap-start group cursor-pointer">
-<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
-<img alt="Coming soon movie poster with mysterious atmosphere" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvfIg_4g8by9RLxqtfM0RhajvlDxPoz9n2R3Z5QT_IoV7UhiFN8KkNvX7sgGj7mpT_kvJmKASeC54LTkFnVrZShmQha6sNtyG7ahs9V9WzUCqAOeN6SGMmpyhDqPe7ALvmfSSJiLuiV2KaKb7ZKj4jtRISWQvD4-NJa7YQcnjA1Sag48tXbN9--XSf6NkBxEkidGNBxmYKDpoe0uL6KM0WaOnHBM_OVC-x4OUlnD76-vm3SEYtVU0O0zg-Y15E5YxWCZKY5O1A6cQg"/>
-<div class="absolute bottom-0 left-0 right-0 bg-primary text-white text-center text-sm font-bold py-2">
-                            26 ต.ค.
-                         </div>
-</div>
-<h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">Five Nights At Freddy's</h4>
-<p class="text-xs text-slate-500 mt-1">สยองขวัญ</p>
-</div>
-<!-- CS Card 2 -->
-<div class="min-w-[160px] md:min-w-[200px] snap-start group cursor-pointer">
-<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
-<img alt="Coming soon movie poster featuring a fast car" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZqV96pBJqse-HMTaNR3gkgw31PQlDZC1nDLjPgwVg2wJdybF-xCh77mS9ZHcuxG5mnbdosykm04kSgv9VTM94mmhDFYUqF6VUd7XpdQqZ2woWWmaTg8LtM7BRrIa2-FPWgCiejZx6UW4s29S8h-J5bRcgynNm5IjvbVsHAHJ-mIw-p1gFuKbO2qRpS07850BfyZKToC_qahKVOjRngpTwxgnQfPq0oAp6cZN7LU8KEgv4dXW9Zinv96ZSq5hLGmXyl7Ud8my9qG4A"/>
-<div class="absolute bottom-0 left-0 right-0 bg-slate-800 text-white text-center text-sm font-bold py-2">
-                            2 พ.ย.
-                         </div>
-</div>
-<h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">Fast &amp; Furious X Part 2</h4>
-<p class="text-xs text-slate-500 mt-1">แอ็คชัน</p>
-</div>
-<!-- CS Card 3 -->
-<div class="min-w-[160px] md:min-w-[200px] snap-start group cursor-pointer">
-<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
-<img alt="Coming soon movie poster with romantic sunset" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOyU_6wTYJyFJbd1f9QiOXmxBndT6AzZU39YWlQjdGYAWNZGEtnr5bBUaO6qNKvHXVTmlKeITLad8N2YEDUk81cuSB7XvKyBL9Q4ICj3KkfMpIFemVzFZrvqKPLxgjvEB84Lp4NA6vA7pwu93pcYq0zvRDgLUPQ7UZ9-lrb57lCvUYFjklrbXRz6olokSyUzOv0n2NG4Bv9JrXC3RhfjE_8MdtgvLwgwEjJXkW2xSStPDLLCsmkbXaiiSmk6Daou01xnLrmFUt3c81"/>
-<div class="absolute bottom-0 left-0 right-0 bg-slate-800 text-white text-center text-sm font-bold py-2">
-                            9 พ.ย.
-                         </div>
-</div>
-<h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">Past Lives</h4>
-<p class="text-xs text-slate-500 mt-1">โรแมนติก / ดราม่า</p>
-</div>
-<!-- CS Card 4 -->
-<div class="min-w-[160px] md:min-w-[200px] snap-start group cursor-pointer">
-<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
-<img alt="Coming soon movie poster with cartoon characters" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDSjR5liVhPjGih798JMlVvNcyil09W0PGMZwBB9QxW8BEO4Rj2LKmxRscEgKK3aBSKrFp2fZlbs7InGU1gIhigM2Nl0wGi8DZlrXDKT6pD83V6KHwuwK2OaCSqi3PUl6LEuOncT1lDs6ghcTR93mrarIjPP_pfeb5Ml1UPWJtv7f7VCVkNcKED2diLo5ZJiPr4EMQialsKn4-4JZkk-2CfpzS4XpFWPz3vaDGsvIDWoji588BdYXNdjilVvvpn3p1bm8oOJhledzo"/>
-<div class="absolute bottom-0 left-0 right-0 bg-slate-800 text-white text-center text-sm font-bold py-2">
-                            16 พ.ย.
-                         </div>
-</div>
-<h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">Wish</h4>
-<p class="text-xs text-slate-500 mt-1">แอนิเมชัน</p>
-</div>
-<!-- CS Card 5 -->
-<div class="min-w-[160px] md:min-w-[200px] snap-start group cursor-pointer">
-<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
-<img alt="Coming soon movie poster abstract art" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnmHSOMdXDnSw4ZTxLgO9ZCUuHWv3HvtCmpT9nWMwLoP3ozk8PyePRKACD55QC88uN000FJbT-5RCZJBXK_d5uYPrIF4JNw32rCMDx7idPw9ijIzGzsvOFUi-mZASFip1hi6lcwfKfo0ert4sN6bwxkaAfWz2-ggx3X5GAIhE-9u1WNV037bGUsV8CzCfFJD_WMEh2myn6cy5YnY8PNsJQfyhEsKHsIrKNmpNbixXVvmcbFArN_UdN30lbWg5h2y0cbNXBz2tIy4H0"/>
-<div class="absolute bottom-0 left-0 right-0 bg-slate-800 text-white text-center text-sm font-bold py-2">
-                            23 พ.ย.
-                         </div>
-</div>
-<h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">Napoleon</h4>
-<p class="text-xs text-slate-500 mt-1">ชีวประวัติ / สงคราม</p>
-</div>
-<!-- CS Card 6 -->
-<div class="min-w-[160px] md:min-w-[200px] snap-start group cursor-pointer">
-<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
-<img alt="Coming soon movie poster sci fi art" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0pOJIu2BlWZXMqg9blwb_HX1uLgPgIkcBCL45kE25dURaI2bNP-ty8zqyDKRtwYoHkF-N4nRcwjJYmpGTA4LxZHbGANJRxJtmD3p7_4rYb5zPPOhxxfl8sc3mPIOJ78LOWEgOVuQ_5MAKTsJ_h7I9hDuXgwUDOGAP4qoh1NNPVBfz1V6Q4L0qG37Hs08Wblmym2iB1LiLIc5g11CyPoFoF0QJ4tqGXp2PRPl5c0c5shMwHipDcgyfCG5iTmHI7n3XYQq1jyT6dXtc"/>
-<div class="absolute bottom-0 left-0 right-0 bg-slate-800 text-white text-center text-sm font-bold py-2">
-                            5 ธ.ค.
-                         </div>
-</div>
-<h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">Aquaman 2</h4>
-<p class="text-xs text-slate-500 mt-1">แอ็คชัน / ไซไฟ</p>
-</div>
-</div>
-</div>
+<div class="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x" id="coming-soon-list"></div>
+</section>
 </main>
 <!-- Footer -->
-<footer class="bg-white border-t border-slate-200 py-12 mt-auto">
-<div class="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-<div>
-<h5 class="font-bold text-slate-900 mb-4">Cinema</h5>
-<ul class="space-y-2 text-sm text-slate-600">
-<li><a class="hover:text-primary" href="about.html">เกี่ยวกับเรา</a></li>
-<li><a class="hover:text-primary" href="careers.html">สมัครงาน</a></li>
-<li><a class="hover:text-primary" href="advertising.html">ติดต่อโฆษณา</a></li>
-</ul>
-</div>
-<div>
-<h5 class="font-bold text-slate-900 mb-4">บริการช่วยเหลือ</h5>
-<ul class="space-y-2 text-sm text-slate-600">
-<li><a class="hover:text-primary" href="faq.html">คำถามที่พบบ่อย</a></li>
-<li><a class="hover:text-primary" href="contact.html">ติดต่อเรา</a></li>
-<li><a class="hover:text-primary" href="terms-of-service.html">ข้อตกลงและเงื่อนไข</a></li>
-</ul>
-</div>
-<div>
-<h5 class="font-bold text-slate-900 mb-4">ภาพยนตร์</h5>
-<ul class="space-y-2 text-sm text-slate-600">
-<li><a class="hover:text-primary" href="index.html#movie-grid">กำลังฉาย</a></li>
-<li><a class="hover:text-primary" href="index.html#coming-soon">โปรแกรมหน้า</a></li>
-<li><a class="hover:text-primary" href="promotions.html">โปรโมชั่น</a></li>
-</ul>
-</div>
-<div>
-<h5 class="font-bold text-slate-900 mb-4">ติดตามเรา</h5>
-<div class="flex gap-4">
-<a class="text-slate-400 hover:text-primary transition" href="https://www.instagram.com" rel="noopener" target="_blank"><span class="material-symbols-outlined">public</span></a>
-<a class="text-slate-400 hover:text-primary transition" href="https://www.facebook.com" rel="noopener" target="_blank"><span class="material-symbols-outlined">thumb_up</span></a>
-<a class="text-slate-400 hover:text-primary transition" href="https://x.com" rel="noopener" target="_blank"><span class="material-symbols-outlined">share</span></a>
-</div>
-</div>
-</div>
-<div class="text-center text-xs text-slate-400 pt-8 border-t border-slate-100">
-                © 2023 Cinema. All rights reserved.
-            </div>
-</div>
-</footer>
+<footer id="site-footer"></footer>
+<script>cinemaUi.footer();</script>
 <script src="movies-data.js"></script>
 <script>
     (async () => {
@@ -304,7 +166,7 @@
         }
 
         function getPoster(movie) {
-            return movie.backdropImage || movie.trailerImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id)}/500/750`;
+            return movie.posterImage || movie.backdropImage || movie.trailerImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id)}/500/750`;
         }
 
         async function hydrateMoviePosters() {
@@ -320,7 +182,8 @@
             }));
         }
 
-        const allMovies = Object.values(moviesDatabase).map((movie) => ({
+        const isComingSoon = (movie) => movie.status === 'coming_soon';
+        const allMovies = Object.values(moviesDatabase).filter((movie) => !isComingSoon(movie)).map((movie) => ({
             ...movie,
             normalizedGenres: (movie.genres || []).map(normalizeGenreLabel)
         }));
@@ -635,92 +498,39 @@
             });
         });
 
+        function renderComingSoon() {
+            const section = document.getElementById('coming-soon');
+            const list = document.getElementById('coming-soon-list');
+            const releaseTime = (movie) => Date.parse(movie.releaseDate || '') || Number.MAX_SAFE_INTEGER;
+            const movies = Object.values(moviesDatabase).filter(isComingSoon).sort((a, b) => releaseTime(a) - releaseTime(b));
+            section.classList.toggle('hidden', movies.length === 0);
+            const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            list.innerHTML = movies.map((movie, index) => {
+                const time = Date.parse(movie.releaseDate || '');
+                const dateLabel = Number.isNaN(time) ? 'เร็ว ๆ นี้' : new Date(time).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                const poster = movie.posterImage || movie.backdropImage || movie.trailerImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id)}/500/750`;
+                return `<a class="min-w-[160px] md:min-w-[200px] max-w-[200px] snap-start group" href="movie-details.html?id=${encodeURIComponent(movie.id)}">
+                    <div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 mb-3 shadow-md">
+                        <img alt="โปสเตอร์ ${esc(movie.titleThai || movie.titleEng)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${esc(poster)}" loading="lazy"/>
+                        ${movie.ageLimit ? `<span class="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-xs font-bold text-white">${esc(movie.ageLimit)}</span>` : ''}
+                        <div class="absolute bottom-0 left-0 right-0 ${index === 0 ? 'bg-primary' : 'bg-slate-800'} text-white text-center text-sm font-bold py-2">เข้าฉาย ${esc(dateLabel)}</div>
+                    </div>
+                    <h4 class="font-bold text-slate-900 line-clamp-1 group-hover:text-primary">${esc(movie.titleThai || movie.titleEng)}</h4>
+                    <p class="text-xs text-slate-500 mt-1 line-clamp-1">${esc((movie.genres || []).slice(0, 2).map(normalizeGenreLabel).join(' / '))}</p>
+                </a>`;
+            }).join('');
+        }
+
         updateHeroBanner(0);
         startHeroAutoplay();
         renderMovieGrid('all', '', 1);
+        renderComingSoon();
+        // footer link "โปรแกรมหน้า" → the section only appears after the catalog loads
+        if (window.location.hash === '#coming-soon') document.getElementById('coming-soon').scrollIntoView();
     })();
 </script>
 
-<!-- Login Modal Backdrop & Container -->
-<div id="auth-backdrop" class="fixed inset-0 bg-black/0 backdrop-blur-0 transition-all duration-300 z-40 hidden" style="pointer-events: none;"></div>
 
-<!-- Login/Signup Modal -->
-<div id="auth-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 overflow-hidden">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-            <h2 class="text-2xl font-black text-slate-900 dark:text-white" id="modal-title">เข้าสู่ระบบ</h2>
-            <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                <span class="material-symbols-outlined text-2xl">close</span>
-            </button>
-        </div>
-
-        <!-- Modal Content -->
-        <div class="p-6">
-            <!-- Tab Buttons -->
-            <div class="flex gap-2 mb-6 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
-                <button class="auth-tab-btn flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-colors tab-login active bg-white dark:bg-slate-600 text-slate-900 dark:text-white" data-tab="login">
-                    เข้าสู่ระบบ
-                </button>
-                <button class="auth-tab-btn flex-1 py-2 px-4 rounded-md font-semibold text-sm transition-colors tab-signup text-slate-600 dark:text-slate-300" data-tab="signup">
-                    สร้างบัญชี
-                </button>
-            </div>
-
-            <!-- Login Form -->
-            <form id="login-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">อีเมล</label>
-                    <input id="login-email" type="email" placeholder="your@email.com" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent" required/>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">รหัสผ่าน</label>
-                    <input id="login-password" type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent" required/>
-                </div>
-                <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white py-2.5 rounded-lg font-bold transition-colors">
-                    เข้าสู่ระบบ
-                </button>
-                <p class="text-slate-600 dark:text-slate-400 text-sm text-center" id="login-error"></p>
-            </form>
-
-            <!-- Signup Form -->
-            <form id="signup-form" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">ชื่อเล่น</label>
-                    <input id="signup-nickname" type="text" placeholder="ชื่อของคุณ" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent" required/>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">อีเมล</label>
-                    <input id="signup-email" type="email" placeholder="your@email.com" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent" required/>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">รหัสผ่าน</label>
-                    <input id="signup-password" type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent" required/>
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">ยืนยันรหัสผ่าน</label>
-                    <input id="signup-confirm-password" type="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent" required/>
-                </div>
-                <button type="submit" class="w-full bg-primary hover:bg-pink-600 text-white py-2.5 rounded-lg font-bold transition-colors">
-                    สร้างบัญชี
-                </button>
-                <p class="text-slate-600 dark:text-slate-400 text-sm text-center" id="signup-error"></p>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- User Profile Menu -->
-<div id="profile-menu" class="absolute top-20 right-4 bg-white dark:bg-slate-800 rounded-lg shadow-lg hidden z-40 min-w-48">
-    <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-        <p class="font-bold text-slate-900 dark:text-white" id="user-name">ผู้ใช้</p>
-        <p class="text-sm text-slate-500 dark:text-slate-400" id="user-email">email@example.com</p>
-    </div>
-    <button id="logout-btn" class="w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
-        <span class="material-symbols-outlined text-lg">logout</span>
-        ออกจากระบบ
-    </button>
-</div>
 
 <script type="module">
     import { app, firebaseConfig } from './firebase-init.js';

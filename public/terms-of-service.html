@@ -24,8 +24,14 @@
       }
     }
   </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
+<link href="site.css" rel="stylesheet"/>
+<script src="site-ui.js"></script>
 </head>
-<body class="bg-background-light font-display text-slate-900 min-h-screen">
+<body class="flex flex-col bg-background-light font-display text-slate-900 min-h-screen">
+<header id="site-header"></header>
+<script>cinemaUi.header({});</script>
   <main class="max-w-3xl mx-auto px-4 py-8">
     <div class="bg-surface rounded-2xl border border-slate-200 p-6">
       <h1 class="text-2xl font-black mb-4">เงื่อนไขการให้บริการ</h1>
@@ -37,5 +43,7 @@
       </ul>
     </div>
   </main>
+<footer id="site-footer"></footer>
+<script>cinemaUi.footer();</script>
 </body>
 </html>

@@ -727,6 +727,9 @@ async function getRealMoviePoster(movie) {
         return null;
     }
 
+    // A poster set (or uploaded) by the admin always wins over the automatic lookup.
+    if (movie.posterImage) return movie.posterImage;
+
     const cached = getCachedPoster(movie.id);
     if (cached) return cached;
 

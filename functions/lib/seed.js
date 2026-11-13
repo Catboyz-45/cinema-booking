@@ -15,7 +15,7 @@ const {
 } = require("./util");
 const { DEFAULT_PRICING, DEFAULT_PROMOTIONS } = require("./domain");
 
-const SEED_VERSION = 3;
+const SEED_VERSION = 4;
 
 // Garbled synopses from the first version of the sample data → replaced by the text in data/movies-data.js.
 const GARBLED_DESCRIPTIONS = {
@@ -25,6 +25,15 @@ const GARBLED_DESCRIPTIONS = {
   "trolls-band-together": "เอลฟ์สวนวิเศษภาพเรื่องน้อยน้อยเพลง และมิตรภาพหลังจากไผ่ทั่วนอกอความระบบ"
 };
 const SEED_DAYS = 7;
+
+function loadComingSoon() {
+  try {
+    // eslint-disable-next-line global-require
+    return require("../data/coming-soon.js");
+  } catch (_error) {
+    return [];
+  }
+}
 
 function loadCatalog() {
   try {
@@ -60,10 +69,35 @@ async function writeIfMissing(firestore, refsWithData) {
 async function runSeed(firestore, { logger = console } = {}) {
   const metaRef = firestore.collection("meta").doc("seed");
   const meta = await metaRef.get();
-  if (meta.exists && Number(meta.data().version) >= SEED_VERSION) return;
+  const fromVersion = meta.exists ? Number(meta.data().version) || 0 : 0;
+  if (fromVersion >= SEED_VERSION) return;
 
-  logger.log(`Running data seed v${SEED_VERSION}...`);
+  logger.log(`Running data seed v${fromVersion} → v${SEED_VERSION}...`);
   const now = new Date().toISOString();
+  // v1–v3: sample catalog, showtimes, settings and legacy-data fixes. Skipped on databases that already have them,
+  // so movies or showtimes the admin deleted are not brought back.
+  if (fromVersion < 3) await seedBaseData(firestore, now);
+
+  // v4: "โปรแกรมหน้า" movies (only added when missing — never overwrites admin edits).
+  await writeIfMissing(firestore, loadComingSoon().map((movie) => [
+    firestore.collection("movies").doc(movie.id),
+    {
+      ...movie,
+      duration: formatDuration(movie.durationMinutes),
+      status: "coming_soon",
+      rating: "",
+      reviews: "",
+      cast: [],
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]));
+
+  await metaRef.set({ version: SEED_VERSION, seededAt: now });
+  logger.log("Data seed complete.");
+}
+
+async function seedBaseData(firestore, now) {
   const catalog = loadCatalog();
   const today = todayInBangkok();
 
@@ -198,9 +232,6 @@ async function runSeed(firestore, { logger = console } = {}) {
     if (pending >= 400) await flush();
   }
   await flush();
-
-  await metaRef.set({ version: SEED_VERSION, seededAt: now });
-  logger.log("Data seed complete.");
 }
 
 module.exports = { runSeed, showtimeIdFor, SEED_VERSION };

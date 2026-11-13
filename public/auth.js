@@ -51,6 +51,7 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
             });
             setMemberPoints(profile?.loyaltyPoints || 0);
             window.authModule.profile = profile;
+            document.getElementById('menu-admin')?.classList.toggle('hidden', profile?.role !== 'admin');
             return profile;
         } catch (error) {
             console.warn('Could not sync user profile to backend:', error);
@@ -79,9 +80,13 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
         localStorage.setItem('cinema.userEmail', email);
         localStorage.setItem('cinema.userDisplayName', displayName);
 
-        profileBtn.innerHTML = `<span class="text-lg font-bold text-white">${(displayName || email).charAt(0).toUpperCase()}</span>`;
-        profileBtn.className = 'flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white font-bold cursor-pointer hover:bg-pink-700 transition';
+        const initial = (displayName || email || '?').trim().charAt(0).toUpperCase();
+        const safeName = String(displayName).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+        profileBtn.innerHTML = `<span class="sh-avatar">${initial.replace(/[&<>"']/g, '')}</span><span class="sh-name">${safeName}</span><span class="material-symbols-outlined" aria-hidden="true">expand_more</span>`;
+        profileBtn.className = 'sh-profile is-user';
         profileBtn.title = displayName || email;
+        profileBtn.setAttribute('aria-haspopup', 'menu');
+        document.getElementById('sh-points')?.classList.add('on');
 
         const userNameEl = document.getElementById('user-name');
         const userEmailEl = document.getElementById('user-email');
@@ -98,9 +103,12 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
         if (!profileBtn) return;
         isAuthenticated = false;
         setMemberPoints(0);
-        profileBtn.innerHTML = `<button class="text-sm font-bold text-primary hover:text-pink-700 px-4 py-2 rounded-lg border border-primary hover:border-pink-700 transition-colors">Login</button>`;
-        profileBtn.className = 'cursor-pointer';
-        profileBtn.title = 'Login';
+        profileBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">login</span><span>เข้าสู่ระบบ</span>';
+        profileBtn.className = 'sh-profile is-guest';
+        profileBtn.title = 'เข้าสู่ระบบ';
+        profileBtn.removeAttribute('aria-haspopup');
+        document.getElementById('sh-points')?.classList.remove('on');
+        document.getElementById('menu-admin')?.classList.add('hidden');
 
         const userNameEl = document.getElementById('user-name');
         const userEmailEl = document.getElementById('user-email');
@@ -124,8 +132,12 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
         authBackdrop.classList.remove('hidden');
         authBackdrop.style.pointerEvents = 'auto';
         authBackdrop.style.backdropFilter = 'blur(4px)';
-        authBackdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        authBackdrop.style.backgroundColor = 'rgba(22, 17, 31, 0.55)';
+        setTimeout(() => (loginForm && !loginForm.classList.contains('hidden') ? document.getElementById('login-email') : document.getElementById('signup-nickname'))?.focus(), 50);
     }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !authModal.classList.contains('hidden')) closeAuthModal();
+    });
     
     // Make openAuthModal globally accessible
     window.authModule.openAuthModal = openAuthModal;
@@ -329,7 +341,12 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
                 return;
             }
 
-            window.location.href = 'user.html';
+            if (profileMenu) {
+                profileMenu.classList.toggle('hidden');
+                profileBtn.setAttribute('aria-expanded', String(!profileMenu.classList.contains('hidden')));
+            } else {
+                window.location.href = 'user.html';
+            }
         });
     }
 
@@ -346,6 +363,7 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
                 localStorage.removeItem('cinema.userDisplayName');
                 
                 if (profileMenu) profileMenu.classList.add('hidden');
+                if (/user\.html$/.test(window.location.pathname)) window.location.href = 'index.html';
             } catch (error) {
                 console.error('Logout failed:', error);
             }
@@ -359,7 +377,7 @@ export function initializeAuthUI(firebaseApp, firebaseConfig) {
             applyAuthenticatedProfile({
                 uid: user.uid,
                 email: user.email || '',
-                displayName: user.displayName || 'ผู้ใช้'
+                displayName: user.displayName || (user.email || '').split('@')[0] || 'ผู้ใช้'
             });
             flushRequireLoginCallbacks();
             syncProfile();

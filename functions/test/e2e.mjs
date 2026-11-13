@@ -118,6 +118,26 @@ const sales = await call("/api/admin/reports/sales?groupBy=day", { user: admin }
 check("sales report totals", sales.data.totals.revenue === 760 && sales.data.totals.tickets === 2, JSON.stringify(sales.data.totals));
 const monthly = await call("/api/admin/reports/sales?groupBy=month", { user: admin });
 check("monthly sales report", monthly.data.rows.length >= 1 && monthly.data.totals.revenue === 760);
+
+// uploaded images
+const PNG_1PX = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+check("customer cannot upload images", (await call("/api/admin/images", { method: "POST", body: { dataUrl: `data:image/png;base64,${PNG_1PX}` }, user: alice })).status === 403);
+check("non-image upload rejected", (await call("/api/admin/images", { method: "POST", body: { dataUrl: "data:text/html;base64,PGgxPmhpPC9oMT4=" }, user: admin })).status === 400);
+check("fake png rejected", (await call("/api/admin/images", { method: "POST", body: { dataUrl: "data:image/png;base64,PGgxPmhpPC9oMT4=" }, user: admin })).status === 400);
+const bigJpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(720 * 1024)]).toString("base64");
+check("oversized image rejected", (await call("/api/admin/images", { method: "POST", body: { dataUrl: `data:image/jpeg;base64,${bigJpeg}` }, user: admin })).status === 413);
+const upload = await call("/api/admin/images", { method: "POST", body: { dataUrl: `data:image/png;base64,${PNG_1PX}` }, user: admin });
+check("admin uploads image", upload.status === 201 && /^\/api\/images\/[A-Za-z0-9_-]{16,}$/.test(upload.data?.path), JSON.stringify(upload.data));
+const imageRes = await fetch(API + upload.data.path);
+const imageBytes = Buffer.from(await imageRes.arrayBuffer());
+check("uploaded image is served publicly", imageRes.status === 200 && imageRes.headers.get("content-type") === "image/png"
+  && imageBytes.equals(Buffer.from(PNG_1PX, "base64")) && /immutable/.test(imageRes.headers.get("cache-control") || ""));
+check("unknown image is 404", (await fetch(`${API}/api/images/doesnotexist0000000000`)).status === 404);
+const imageMovie = await call("/api/admin/movies", { method: "POST", user: admin, body: { titleThai: "หนังทดสอบรูป", titleEng: "Image Test", durationMinutes: 100, posterImage: API + upload.data.path } });
+check("movie accepts uploaded image URL", imageMovie.status === 201 && imageMovie.data.posterImage === API + upload.data.path, imageMovie.data?.message);
+await call(`/api/admin/movies/${imageMovie.data.id}`, { method: "PUT", user: admin, body: { titleThai: "หนังทดสอบรูป", durationMinutes: 100, posterImage: "" } });
+check("replaced upload is deleted", (await fetch(API + upload.data.path)).status === 404);
+await call(`/api/admin/movies/${imageMovie.data.id}`, { method: "DELETE", user: admin });
 const byMovie = await call("/api/admin/reports/movies", { user: admin });
 check("movie report", byMovie.data.rows[0]?.movieId === movie.id && byMovie.data.rows[0].tickets === 2);
 const byShow = await call(`/api/admin/reports/showtimes?date=${slot.date}`, { user: admin });
