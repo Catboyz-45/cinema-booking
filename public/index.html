@@ -422,10 +422,7 @@
                             <span class="border border-slate-300 text-xs px-1 rounded">${movie.ageLimit || 'G'}</span>
                         </div>
                         <p class="text-xs text-slate-500 mt-1 truncate">${movie.normalizedGenres.join(' • ')}</p>
-                        <div class="mt-2 flex items-center gap-1 text-yellow-500 text-sm font-medium">
-                            <span class="material-symbols-outlined text-base fill-current">star</span>
-                            <span>${movie.rating}</span>
-                        </div>
+                        ${movie.rating ? `<div class="mt-2 flex items-center gap-1 text-yellow-500 text-sm font-medium"><span class="material-symbols-outlined text-base fill-current">star</span><span>${window.cinemaApi.escapeHtml(String(movie.rating))}</span></div>` : ''}
                     </div>
                 </div>
             `).join('');
