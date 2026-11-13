@@ -79,6 +79,7 @@
                 <p>โปรแกรมฉาย</p>
                 <button class="nav-btn" data-tab="movies" type="button"><span class="material-symbols-outlined">movie</span>ภาพยนตร์</button>
                 <button class="nav-btn" data-tab="showtimes" type="button"><span class="material-symbols-outlined">calendar_month</span>รอบฉาย</button>
+                <button class="nav-btn" data-tab="cinemas" type="button"><span class="material-symbols-outlined">storefront</span>สาขา</button>
             </div>
             <div class="side-group">
                 <p>การขาย</p>
@@ -339,6 +340,19 @@
             </section>
 
             <!-- Promotions -->
+            <!-- Cinemas / branches -->
+            <section data-panel="cinemas" class="hidden space-y-5">
+                <div class="page-head">
+                    <p>ข้อมูลและรูปสาขาที่แสดงในหน้า "โรงภาพยนตร์" ของเว็บ • โรงย่อยใช้ตอนสร้างรอบฉาย</p>
+                    <button class="btn btn-primary" id="cinema-add-btn" type="button"><span class="material-symbols-outlined">add</span>เพิ่มสาขา</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="input-icon flex-1 min-w-[14rem] max-w-md"><span class="material-symbols-outlined">search</span><input class="field" id="cinema-search" placeholder="ค้นหาชื่อสาขาหรือจังหวัด" type="search" aria-label="ค้นหาสาขา"/></div>
+                    <div class="segmented" id="cinema-filter" role="group" aria-label="กรองสาขา"></div>
+                </div>
+                <div id="cinemas-table"></div>
+            </section>
+
             <section data-panel="promotions" class="hidden space-y-5">
                 <div class="page-head">
                     <p>ลูกค้าแต่ละคนใช้แต่ละโค้ดได้ 1 ครั้ง</p>

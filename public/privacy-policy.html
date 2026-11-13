@@ -1,52 +1,73 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>นโยบายความเป็นส่วนตัว</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>นโยบายความเป็นส่วนตัว - Cinema</title>
+  <meta name="description" content="นโยบายความเป็นส่วนตัวของ Cinema ข้อมูลที่เก็บ วัตถุประสงค์ การเปิดเผย และสิทธิของคุณตาม PDPA"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#e9508c',
-            'background-light': '#f8f6f7',
-            surface: '#ffffff'
-          },
-          fontFamily: {
-            display: ['Inter', 'Noto Sans Thai', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
-<link href="site.css" rel="stylesheet"/>
-<script src="site-ui.js"></script>
+  <link href="site.css" rel="stylesheet"/>
+  <script src="cinema-api.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="info-pages.js"></script>
 </head>
-<body class="flex flex-col bg-background-light font-display text-slate-900 min-h-screen">
+<body class="flex flex-col min-h-screen">
 <header id="site-header"></header>
 <script>cinemaUi.header({});</script>
-  <main class="max-w-3xl mx-auto px-4 py-8">
-    <div class="bg-surface rounded-2xl border border-slate-200 p-6">
-      <h1 class="text-2xl font-black mb-4">นโยบายความเป็นส่วนตัว</h1>
-      <ul class="space-y-3 text-sm text-slate-700 list-disc pl-5">
-        <li>ระบบเก็บข้อมูลที่จำเป็นต่อการจองตั๋ว เช่น อีเมล รอบฉาย และรายการที่นั่ง</li>
-        <li>ข้อมูลส่วนบุคคลจะถูกใช้เพื่อยืนยันการจอง การชำระเงิน และการให้บริการหลังการขายเท่านั้น</li>
-        <li>ระบบไม่เปิดเผยข้อมูลส่วนบุคคลให้บุคคลภายนอก ยกเว้นกรณีที่กฎหมายกำหนด</li>
-        <li>ผู้ใช้งานสามารถติดต่อฝ่ายบริการลูกค้าเพื่อสอบถาม แก้ไข หรือลบข้อมูลตามสิทธิของตน</li>
-      </ul>
-      <div class="mt-6">
-        <a href="index.html" class="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-white font-bold hover:opacity-90">กลับหน้าแรก</a>
-      </div>
+
+<main class="flex-grow">
+  <section class="info-hero">
+    <div class="info-hero-in">
+      <span class="info-eyebrow"><span class="material-symbols-outlined">shield_person</span>ความเป็นส่วนตัว</span>
+      <h1>นโยบายความเป็นส่วนตัว</h1>
+      <p class="lead">เราเก็บข้อมูลเท่าที่จำเป็นต่อการจองตั๋ว และไม่ขายข้อมูลของคุณให้ใคร หน้านี้อธิบายทุกอย่างที่เราเก็บ เหตุผล และสิทธิของคุณตาม PDPA</p>
+      <div class="meta"><span><span class="material-symbols-outlined">update</span>ปรับปรุงล่าสุด 13 พฤศจิกายน 2569</span><span><span class="material-symbols-outlined">verified_user</span>ไม่เก็บเลขบัตรและรหัสผ่าน</span></div>
     </div>
-  </main>
+  </section>
+  <div class="info-wrap">
+    <div class="info-note pink mb-6"><span class="material-symbols-outlined">school</span><div>
+<b>เว็บไซต์นี้เป็นโปรเจกต์เพื่อการศึกษา</b> ในรายวิชา 02739322 Information System Analysis and Design
+ข้อมูลภาพยนตร์ รอบฉาย และสาขาเป็นข้อมูลตัวอย่าง การชำระเงินใช้<b>โหมดทดสอบของ Stripe</b> จึงไม่มีการตัดเงินจริง</div></div>
+    <div class="legal-grid">
+      <nav class="toc info-card !p-3" aria-label="สารบัญ"><p>สารบัญ</p><a href="#scope">1. ขอบเขตของนโยบาย</a><a href="#data">2. ข้อมูลที่เราเก็บ</a><a href="#purpose">3. วัตถุประสงค์และฐานทางกฎหมาย</a><a href="#share">4. การเปิดเผยข้อมูล</a><a href="#transfer">5. การส่งข้อมูลไปต่างประเทศ</a><a href="#retention">6. ระยะเวลาเก็บข้อมูล</a><a href="#rights">7. สิทธิของคุณ</a><a href="#security">8. การรักษาความปลอดภัย</a><a href="#cookies">9. คุกกี้และพื้นที่จัดเก็บในเบราว์เซอร์</a><a href="#minors">10. ข้อมูลของผู้เยาว์</a><a href="#changes">11. การเปลี่ยนแปลงนโยบาย</a><a href="#contact">12. ติดต่อเรื่องข้อมูลส่วนบุคคล</a></nav>
+      <article class="info-card prose-info"><section id="scope"><h2><span class="no">1.</span>ขอบเขตของนโยบาย</h2><p>นโยบายนี้อธิบายว่าเว็บไซต์ Cinema เก็บ ใช้ และดูแลข้อมูลส่วนบุคคลของคุณอย่างไร ตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA) ใช้กับเว็บไซต์ ระบบจองตั๋ว และการติดต่อฝ่ายบริการลูกค้า</p></section><section id="data"><h2><span class="no">2.</span>ข้อมูลที่เราเก็บ</h2><div class="table-scroll"><table><thead><tr><th>ประเภท</th><th>ข้อมูล</th></tr></thead><tbody>
+<tr><td><strong>บัญชีผู้ใช้</strong></td><td>อีเมล ชื่อที่แสดง รหัสผู้ใช้ และวันที่สมัคร (รหัสผ่านจัดการโดย Firebase Authentication เราไม่เห็นรหัสผ่านของคุณ)</td></tr>
+<tr><td><strong>การจอง</strong></td><td>รอบฉาย สาขา ที่นั่ง ยอดเงิน ส่วนลด โค้ดที่ใช้ คะแนนที่ได้และใช้ สถานะการจอง และเวลาที่เช็คอิน</td></tr>
+<tr><td><strong>การชำระเงิน</strong></td><td>สถานะการชำระ ช่องทาง เลขอ้างอิงธุรกรรม และเลข 4 หลักท้ายของบัตร ข้อมูลบัตรเต็มอยู่กับ Stripe เท่านั้น</td></tr>
+<tr><td><strong>ในเบราว์เซอร์ของคุณ</strong></td><td>รายการ "อยากดู" รายการจองที่ยังไม่เสร็จ และชื่อ/อีเมลที่ใช้แสดงผลในหน้าเว็บ (เก็บใน localStorage บนเครื่องของคุณ)</td></tr>
+<tr><td><strong>ข้อมูลทางเทคนิค</strong></td><td>บันทึกการเข้าใช้งานที่ผู้ให้บริการโฮสติ้งเก็บตามปกติ เช่น ที่อยู่ IP เวลา และประเภทเบราว์เซอร์</td></tr>
+</tbody></table></div></section><section id="purpose"><h2><span class="no">3.</span>วัตถุประสงค์และฐานทางกฎหมาย</h2><ul><li><strong>ให้บริการตามสัญญา</strong> สร้างบัญชี ล็อกที่นั่ง รับชำระเงิน ออกตั๋ว และตรวจตั๋วตอนเข้าโรง</li>
+<li><strong>ประโยชน์โดยชอบด้วยกฎหมาย</strong> ป้องกันการทุจริต ดูแลความปลอดภัยของระบบ และวิเคราะห์ยอดขายแบบรวมเพื่อปรับปรุงบริการ</li>
+<li><strong>หน้าที่ตามกฎหมาย</strong> เก็บหลักฐานการชำระเงินตามที่กฎหมายบัญชีและภาษีกำหนด</li>
+<li><strong>ความยินยอม</strong> กรณีส่งข่าวสารหรือโปรโมชั่น เราจะขอความยินยอมจากคุณก่อน และถอนความยินยอมได้ทุกเมื่อ</li></ul></section><section id="share"><h2><span class="no">4.</span>การเปิดเผยข้อมูล</h2><p>เราไม่ขายข้อมูลส่วนบุคคล และเปิดเผยเท่าที่จำเป็นให้ผู้ให้บริการที่ทำงานแทนเราเท่านั้น</p>
+<ul><li><strong>Stripe</strong> ประมวลผลการชำระเงิน</li>
+<li><strong>Google Firebase</strong> (Authentication, Cloud Firestore, Hosting) จัดการบัญชี ฐานข้อมูล และหน้าเว็บ</li>
+<li><strong>Vercel</strong> ให้บริการเซิร์ฟเวอร์ API</li>
+<li><strong>หน่วยงานรัฐ</strong> เมื่อกฎหมายกำหนดหรือมีคำสั่งโดยชอบด้วยกฎหมาย</li></ul></section><section id="transfer"><h2><span class="no">5.</span>การส่งข้อมูลไปต่างประเทศ</h2><p>ผู้ให้บริการข้างต้นอาจจัดเก็บหรือประมวลผลข้อมูลบนเซิร์ฟเวอร์นอกประเทศไทย เช่น สิงคโปร์และสหรัฐอเมริกา โดยผู้ให้บริการเหล่านี้มีมาตรฐานการคุ้มครองข้อมูลที่เหมาะสมตามที่ PDPA กำหนด</p></section><section id="retention"><h2><span class="no">6.</span>ระยะเวลาเก็บข้อมูล</h2><ul><li>ข้อมูลบัญชี เก็บตลอดระยะเวลาที่บัญชียังใช้งาน และลบภายใน 90 วันหลังได้รับคำขอลบบัญชี</li>
+<li>ข้อมูลการจองและการชำระเงิน เก็บไม่เกินระยะเวลาที่กฎหมายบัญชีและภาษีกำหนด</li>
+<li>ข้อมูลในเบราว์เซอร์ อยู่บนเครื่องของคุณจนกว่าจะออกจากระบบหรือล้างข้อมูลเบราว์เซอร์</li></ul></section><section id="rights"><h2><span class="no">7.</span>สิทธิของคุณ</h2><p>ภายใต้ PDPA คุณมีสิทธิ</p><ul><li>ขอเข้าถึงและขอรับสำเนาข้อมูลของคุณ</li>
+<li>ขอแก้ไขข้อมูลให้ถูกต้องและเป็นปัจจุบัน</li><li>ขอลบหรือทำลายข้อมูล หรือทำให้ไม่สามารถระบุตัวตนได้</li>
+<li>ขอระงับการใช้ หรือคัดค้านการประมวลผลข้อมูล</li><li>ขอให้โอนย้ายข้อมูลในรูปแบบที่อ่านได้ด้วยเครื่องมือทั่วไป</li>
+<li>ถอนความยินยอมที่เคยให้ไว้</li><li>ร้องเรียนต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล (สคส.)</li></ul>
+<p>ใช้สิทธิได้โดยติดต่อ <a data-contact="email" href="#">support@cinema.local</a> จากอีเมลที่ใช้สมัคร เราจะตอบกลับภายใน 30 วัน</p></section><section id="security"><h2><span class="no">8.</span>การรักษาความปลอดภัย</h2><ul><li>รับส่งข้อมูลผ่าน HTTPS ทุกหน้า</li>
+<li>ทุกคำขอที่เกี่ยวกับบัญชีต้องยืนยันตัวตนด้วยโทเคนของ Firebase และเข้าถึงได้เฉพาะข้อมูลของตนเอง</li>
+<li>ระบบหลังบ้านเปิดให้เฉพาะผู้ดูแลที่ได้รับสิทธิ์</li>
+<li>ไม่เก็บเลขบัตรและรหัสผ่านไว้ในระบบของเรา</li></ul></section><section id="cookies"><h2><span class="no">9.</span>คุกกี้และพื้นที่จัดเก็บในเบราว์เซอร์</h2><p>เว็บไซต์ไม่ใช้คุกกี้เพื่อโฆษณาหรือติดตามข้ามเว็บไซต์ เราใช้พื้นที่จัดเก็บในเบราว์เซอร์ (localStorage และ IndexedDB ของ Firebase) เพื่อจำการเข้าสู่ระบบ รายการ "อยากดู" และการจองที่ยังทำไม่เสร็จ คุณลบข้อมูลเหล่านี้ได้จากการตั้งค่าเบราว์เซอร์ แต่จะต้องเข้าสู่ระบบใหม่</p></section><section id="minors"><h2><span class="no">10.</span>ข้อมูลของผู้เยาว์</h2><p>ผู้ที่อายุต่ำกว่า 20 ปีควรได้รับความยินยอมจากผู้ปกครองก่อนสมัครสมาชิกหรือชำระเงิน ถ้าผู้ปกครองพบว่าเราเก็บข้อมูลผู้เยาว์โดยไม่ได้รับความยินยอม ติดต่อเราเพื่อลบข้อมูลได้</p></section><section id="changes"><h2><span class="no">11.</span>การเปลี่ยนแปลงนโยบาย</h2><p>เราอาจปรับปรุงนโยบายนี้ ฉบับล่าสุดจะแสดงในหน้านี้พร้อมวันที่ปรับปรุง ถ้ามีการเปลี่ยนแปลงสำคัญ เราจะแจ้งบนเว็บไซต์ก่อนมีผลบังคับใช้</p></section><section id="contact"><h2><span class="no">12.</span>ติดต่อเรื่องข้อมูลส่วนบุคคล</h2><p>ติดต่อผู้ดูแลข้อมูลส่วนบุคคลได้ที่ <a data-contact="email" href="#">support@cinema.local</a> หรือโทร <a data-contact="phone" href="#">02-029-9999</a> (<span data-contact="hours">ทุกวัน 10:00–22:00 น.</span>)</p></section></article>
+    </div>
+  </div>
+</main>
+
 <footer id="site-footer"></footer>
 <script>cinemaUi.footer();</script>
+
+<script type="module">
+  import { app, firebaseConfig } from './firebase-init.js';
+  import { initializeAuthUI } from './auth.js';
+  initializeAuthUI(app, firebaseConfig);
+</script>
 </body>
 </html>

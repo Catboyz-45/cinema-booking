@@ -1,116 +1,207 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>โปรโมชั่น - Cinema</title>
+  <meta name="description" content="โค้ดส่วนลดค่าตั๋วหนังที่ใช้ได้ตอนนี้ และการแลกคะแนนสมาชิกเป็นส่วนลด"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-<script src="cinema-api.js"></script>
-<script src="site-ui.js"></script>
-  <script>
-    tailwind.config = { theme: { extend: { colors: { primary: '#e9508c', 'background-light': '#f8f6f7' } } } };
-  </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
-<link href="site.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="site.css" rel="stylesheet"/>
+  <script src="cinema-api.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="info-pages.js"></script>
 </head>
-<body class="bg-background-light text-slate-900 min-h-screen flex flex-col font-[Inter]">
+<body class="is-loading flex flex-col min-h-screen">
 <header id="site-header"></header>
-<script>cinemaUi.header({"active": "promotions", "search": {"id": "page-search-input", "placeholder": "ค้นหาโปรโมชั่น"}});</script>
+<script>cinemaUi.header({"active": "promotions", "search": {"id": "page-search-input", "placeholder": "ค้นหาโค้ดหรือส่วนลด"}});</script>
 
-  <main class="flex-grow max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="mb-8">
-      <div>
-        <h1 class="ui-title mb-1">โปรโมชั่น</h1>
-        <p class="text-slate-600">โปรโมชันส่วนลดตั๋ว หนัง และของว่าง</p>
+<main class="flex-grow">
+  <section class="info-hero">
+    <div class="info-hero-in">
+      <span class="info-eyebrow"><span class="material-symbols-outlined">local_activity</span>โปรโมชั่น</span>
+      <h1>ดูหนังคุ้มขึ้น ด้วยโค้ดส่วนลด</h1>
+      <p class="lead">คัดลอกโค้ดด้านล่าง แล้ววางในหน้าชำระเงินได้เลย ทุกโค้ดใช้ร่วมกับการแลกคะแนนสมาชิกได้</p>
+      <div class="meta">
+        <span><span class="material-symbols-outlined">sell</span><b id="hero-count" data-skel>0</b> โค้ดที่ใช้ได้</span>
+        <span><span class="material-symbols-outlined">today</span>ใช้ได้วันนี้ <b id="hero-today" data-skel>0</b> โค้ด</span>
+        <span><span class="material-symbols-outlined">stars</span><span data-fill="loyalty.pointsRequired">80</span> คะแนน = ส่วนลด <span data-fill="loyalty.pointDiscount" data-format="money">฿30</span></span>
       </div>
     </div>
+  </section>
 
-    <div class="grid md:grid-cols-2 gap-4" id="promotion-list">
-      <div class="rounded-xl border border-slate-200 bg-white p-5 promotion-item">
-        <p class="font-bold">Buy 1 Get 1 Free</p>
-        <p class="text-sm text-slate-500 mt-1">ใช้ได้ทุกวันพุธ สำหรับสมาชิก</p>
+  <div class="info-wrap">
+    <div class="info-card">
+      <div class="promo-toolbar">
+        <h2 class="info-h2 !mb-0">โค้ดส่วนลด</h2>
+        <div class="promo-filters" id="promo-filters" role="group" aria-label="กรองโค้ด">
+          <button type="button" data-filter="all" aria-pressed="true">ทั้งหมด <span class="n" id="n-all">0</span></button>
+          <button type="button" data-filter="today" aria-pressed="false">ใช้ได้วันนี้ <span class="n" id="n-today">0</span></button>
+          <button type="button" data-filter="unused" aria-pressed="false" class="hidden" id="filter-unused">ยังไม่เคยใช้ <span class="n" id="n-unused">0</span></button>
+        </div>
       </div>
-      <div class="rounded-xl border border-slate-200 bg-white p-5 promotion-item">
-        <p class="font-bold">ลด 20% ชุดป๊อปคอร์น</p>
-        <p class="text-sm text-slate-500 mt-1">เมื่อซื้อตั๋วผ่านแอป</p>
+      <div class="promo-grid" id="promo-list">
+        <div class="h-[176px] rounded-[22px]" data-skel></div><div class="h-[176px] rounded-[22px]" data-skel></div>
       </div>
-      <div class="rounded-xl border border-slate-200 bg-white p-5 promotion-item">
-        <p class="font-bold">เครดิตการ์ดพาร์ทเนอร์</p>
-        <p class="text-sm text-slate-500 mt-1">ลดสูงสุด 50% ตามเงื่อนไขธนาคาร</p>
+
+      <div class="points-deal mt-8">
+        <div class="badge"><span class="material-symbols-outlined">stars</span></div>
+        <div>
+          <h3>แลก <span data-fill="loyalty.pointsRequired">80</span> คะแนน ลดทันที <span data-fill="loyalty.pointDiscount" data-format="money">฿30</span></h3>
+          <p>สมาชิกใหม่รับ <span data-fill="loyalty.signupBonus" data-format="number">250</span> คะแนน และได้เพิ่ม <span data-fill="loyalty.pointsEarnedPerBooking">50</span> คะแนนทุกการจอง เปิดสวิตช์ "ใช้คะแนนแลกส่วนลด" ในหน้าชำระเงิน ใช้คู่กับโค้ดด้านบนได้</p>
+          <span class="mine hidden" id="my-points"></span>
+        </div>
+        <a class="ui-btn ui-btn-primary" href="membership.html"><span class="material-symbols-outlined">workspace_premium</span>ดูสิทธิพิเศษสมาชิก</a>
       </div>
-      <div class="rounded-xl border border-slate-200 bg-white p-5 promotion-item">
-        <p class="font-bold">คะแนนสมาชิกแลกส่วนลด</p>
-        <p class="text-sm text-slate-500 mt-1">80 คะแนน แลกส่วนลด 100 บาท</p>
-      </div>
+
+      <section class="info-section mt-8">
+        <h2 class="info-h2">ใช้โค้ดยังไง</h2>
+        <ol class="steps mt-4">
+          <li><b>คัดลอกโค้ด</b><p>กดปุ่ม "คัดลอก" บนคูปองที่ต้องการ</p></li>
+          <li><b>เลือกหนังและที่นั่ง</b><p>เลือกรอบและที่นั่ง แล้วไปหน้าชำระเงิน</p></li>
+          <li><b>วางโค้ด</b><p>วางในช่อง "รหัสส่วนลด" แล้วกด "ใช้โค้ด" ระบบจะแสดงยอดใหม่ทันที</p></li>
+        </ol>
+      </section>
+
+      <ul class="prose-info !text-[13.5px] mt-6">
+        <li>แต่ละบัญชีใช้แต่ละโค้ดได้ 1 ครั้ง และใช้ได้ 1 โค้ดต่อการจอง</li>
+        <li>บางโค้ดใช้ได้เฉพาะบางวันในสัปดาห์ ช่วงวันที่ หรือมีจำนวนสิทธิ์จำกัด ระบบตรวจเงื่อนไขให้ตอนกด "ใช้โค้ด"</li>
+        <li>ส่วนลดรวมจะไม่เกินยอดที่ต้องชำระ และไม่สามารถแลกเป็นเงินสดได้ <a href="terms-of-service.html#promo">อ่านเงื่อนไขทั้งหมด</a></li>
+      </ul>
     </div>
-  </main>
+  </div>
+</main>
 
 <footer id="site-footer"></footer>
 <script>cinemaUi.footer();</script>
+<script>
+  (async () => {
+    const api = window.cinemaApi;
+    const esc = api.escapeHtml;
+    const DAY = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+    const DAY_FULL = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+    const list = document.getElementById('promo-list');
+    const search = document.getElementById('page-search-input');
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
+    const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+    const shortDate = (d) => api.formatThaiDate(d, { day: 'numeric', month: 'short', year: '2-digit' });
+    let promos = [];
+    let used = new Set();
+    let filter = 'all';
 
-  <script>
-    (async () => {
-      const api = window.cinemaApi;
-      const esc = api.escapeHtml;
-      const searchInput = document.getElementById('page-search-input');
-      const list = document.getElementById('promotion-list');
-      const memberPoints = document.getElementById('member-points');
-      const DAY_NAMES = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+    const daysText = (days) => {
+      const key = [...days].sort().join(',');
+      if (key === '1,2,3,4,5') return 'จันทร์–ศุกร์';
+      if (key === '0,6') return 'เสาร์–อาทิตย์';
+      return days.length > 2 ? days.map((d) => DAY[d]).join(' ') : days.map((d) => DAY_FULL[d]).join(', ');
+    };
+    const usableToday = (p) => (!p.startDate || p.startDate <= today) && (!p.daysOfWeek?.length || p.daysOfWeek.includes(weekday));
 
-      // Promo codes managed in the admin page.
+    function card(p) {
+      const isUsed = used.has(p.code);
+      const percent = p.discountType === 'percent';
+      const value = percent ? `${p.discountValue}<sup>%</sup>` : `<sup>฿</sup>${Number(p.discountValue).toLocaleString('th-TH')}`;
+      const tags = [];
+      if (p.startDate && p.startDate > today) tags.push(`<span class="wait"><span class="material-symbols-outlined">schedule</span>เริ่ม ${esc(shortDate(p.startDate))}</span>`);
+      else if (usableToday(p)) tags.push('<span class="ok"><span class="material-symbols-outlined">check_circle</span>ใช้ได้วันนี้</span>');
+      tags.push(p.daysOfWeek?.length
+        ? `<span><span class="material-symbols-outlined">calendar_month</span>เฉพาะ${esc(daysText(p.daysOfWeek))}</span>`
+        : '<span><span class="material-symbols-outlined">calendar_month</span>ใช้ได้ทุกวัน</span>');
+      if (p.endDate) tags.push(`<span><span class="material-symbols-outlined">event_busy</span>ถึง ${esc(shortDate(p.endDate))}</span>`);
+      if (p.remaining !== null && p.remaining !== undefined) tags.push(`<span class="hot"><span class="material-symbols-outlined">local_fire_department</span>เหลือ ${Number(p.remaining).toLocaleString('th-TH')} สิทธิ์</span>`);
+      const title = percent ? `ลด ${p.discountValue}% ค่าตั๋ว` : `ลด ${Number(p.discountValue).toLocaleString('th-TH')} บาท`;
+      return `<article class="promo-coupon ${isUsed ? 'used' : ''}" data-code="${esc(p.code)}">
+        ${isUsed ? '<span class="promo-used-badge">คุณใช้แล้ว</span>' : ''}
+        <div class="promo-stub"><small>ส่วนลด</small><strong>${value}</strong><span>${percent ? 'ค่าตั๋ว' : 'ต่อการจอง'}</span></div>
+        <div class="promo-body">
+          <div><h3>${esc(title)}</h3>${p.description ? `<p class="desc mt-1">${esc(p.description)}</p>` : ''}</div>
+          <div class="promo-tags">${tags.join('')}</div>
+          <div class="promo-code-row">
+            <span class="promo-code" aria-label="โค้ด">${esc(p.code)}</span>
+            <button class="promo-copy" type="button" data-copy="${esc(p.code)}" ${isUsed ? 'disabled' : ''}><span class="material-symbols-outlined">content_copy</span>คัดลอก</button>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    function render() {
+      const keyword = (search?.value || '').trim().toLowerCase();
+      const rows = promos
+        .filter((p) => filter === 'all' || (filter === 'today' && usableToday(p)) || (filter === 'unused' && !used.has(p.code)))
+        .filter((p) => !keyword || `${p.code} ${p.description} ลด ${p.discountValue}`.toLowerCase().includes(keyword));
+      document.getElementById('n-all').textContent = promos.length;
+      document.getElementById('n-today').textContent = promos.filter(usableToday).length;
+      document.getElementById('n-unused').textContent = promos.filter((p) => !used.has(p.code)).length;
+      document.getElementById('hero-count').textContent = promos.length;
+      document.getElementById('hero-today').textContent = promos.filter(usableToday).length;
+      list.innerHTML = rows.length
+        ? rows.map(card).join('')
+        : `<div class="col-span-full text-center py-12 text-slate-500"><span class="material-symbols-outlined text-4xl block mb-2">sell</span>${promos.length ? 'ไม่พบโค้ดที่ตรงกับตัวกรอง' : 'ตอนนี้ยังไม่มีโค้ดส่วนลด แต่ยังแลกคะแนนเป็นส่วนลดได้ด้านล่าง'}</div>`;
+    }
+
+    try {
+      const data = await api.request('/api/promotions', { auth: false });
+      // usable today first, then bigger discounts
+      promos = data.sort((a, b) => Number(usableToday(b)) - Number(usableToday(a)) || (b.discountType === 'percent') - (a.discountType === 'percent') || b.discountValue - a.discountValue);
+    } catch (_error) {
+      promos = [];
+    }
+    render();
+    document.body.classList.remove('is-loading');
+
+    document.getElementById('promo-filters').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      filter = button.dataset.filter;
+      document.querySelectorAll('#promo-filters [data-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      render();
+    });
+    search?.addEventListener('input', render);
+
+    list.addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-copy]');
+      if (!button) return;
+      const code = button.dataset.copy;
       try {
-        const promos = await api.request('/api/promotions', { auth: false });
-        if (list && promos.length) {
-          list.insertAdjacentHTML('afterbegin', promos.map((promo) => {
-            const discount = promo.discountType === 'percent' ? `ลด ${promo.discountValue}%` : `ลด ${Number(promo.discountValue).toLocaleString('th-TH')} บาท`;
-            const days = promo.daysOfWeek?.length ? `ใช้ได้วัน${promo.daysOfWeek.map((d) => DAY_NAMES[d]).join(', ')}` : 'ใช้ได้ทุกวัน';
-            const until = promo.endDate ? ` • ถึง ${api.formatThaiDate(promo.endDate, { day: 'numeric', month: 'short', year: 'numeric' })}` : '';
-            return `<div class="rounded-xl border-2 border-primary/30 bg-white p-5 promotion-item">
-              <div class="flex items-center justify-between gap-3">
-                <h3 class="font-bold text-slate-900">${esc(discount)}</h3>
-                <span class="font-mono font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">${esc(promo.code)}</span>
-              </div>
-              <p class="text-sm text-slate-600 mt-2">${esc(promo.description || '')}</p>
-              <p class="text-xs text-slate-500 mt-2">${esc(days + until)} • กรอกโค้ดในหน้าชำระเงิน</p>
-            </div>`;
-          }).join(''));
-        }
+        await navigator.clipboard.writeText(code);
       } catch (_error) {
+        const range = document.createRange();
+        range.selectNodeContents(button.parentElement.querySelector('.promo-code'));
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+        document.execCommand?.('copy');
       }
+      button.classList.add('done');
+      button.innerHTML = '<span class="material-symbols-outlined">check</span>คัดลอกแล้ว';
+      window.cinemaUi?.toast?.(`คัดลอกโค้ด ${code} แล้ว วางได้ในหน้าชำระเงิน`, 'success');
+      setTimeout(() => {
+        button.classList.remove('done');
+        button.innerHTML = '<span class="material-symbols-outlined">content_copy</span>คัดลอก';
+      }, 2200);
+    });
 
-      api.onAuthChange(async (user) => {
-        if (!memberPoints || !user) return;
-        try {
-          const profile = await api.request('/api/me');
-          memberPoints.textContent = `${Number(profile.loyaltyPoints || 0).toLocaleString('th-TH')} คะแนน`;
-        } catch (_error) {
-          memberPoints.textContent = '0 คะแนน';
-        }
-      });
-
-      if (!searchInput) return;
-      searchInput.addEventListener('input', () => {
-        const keyword = searchInput.value.trim().toLowerCase();
-        document.querySelectorAll('.promotion-item').forEach((item) => {
-          const text = item.textContent.toLowerCase();
-          item.style.display = keyword === '' || text.includes(keyword) ? '' : 'none';
-        });
-      });
-    })();
-  </script>
-
-
-
-  <script type="module">
-    import { app, firebaseConfig } from './firebase-init.js';
-    import { initializeAuthUI } from './auth.js';
-
-    initializeAuthUI(app, firebaseConfig);
+    // signed in: mark codes already used and show the member's points
+    api.onAuthChange(async (user) => {
+      if (!user) return;
+      try {
+        const me = await api.request('/api/me');
+        used = new Set([...(me.usedPromoCodes || []), ...Object.entries(me.promoCodeStatus || {}).filter(([, v]) => String(v) === '0').map(([k]) => k)]);
+        document.getElementById('filter-unused').classList.remove('hidden');
+        const mine = document.getElementById('my-points');
+        mine.innerHTML = `<span class="material-symbols-outlined text-base">account_balance_wallet</span>คุณมี ${Number(me.loyaltyPoints || 0).toLocaleString('th-TH')} คะแนน`;
+        mine.classList.remove('hidden');
+        render();
+      } catch (_error) { /* guest view */ }
+    });
+  })();
+</script>
+<script type="module">
+  import { app, firebaseConfig } from './firebase-init.js';
+  import { initializeAuthUI } from './auth.js';
+  initializeAuthUI(app, firebaseConfig);
 </script>
 </body>
 </html>

@@ -1,32 +1,89 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>คำถามที่พบบ่อย - Cinema</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+  <meta name="description" content="คำตอบเรื่องการจองตั๋ว ที่นั่ง การชำระเงิน การคืนเงิน ตั๋ว QR และคะแนนสะสมของ Cinema"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
-<link href="site.css" rel="stylesheet"/>
-<script src="site-ui.js"></script>
+  <link href="site.css" rel="stylesheet"/>
+  <script src="cinema-api.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="info-pages.js"></script>
 </head>
-<body class="flex flex-col bg-[#f8f6f7] text-slate-900 min-h-screen font-[Inter]">
+<body class="flex flex-col min-h-screen">
 <header id="site-header"></header>
 <script>cinemaUi.header({});</script>
-  <main class="max-w-3xl mx-auto px-4 py-10">
-    <div class="bg-white border border-slate-200 rounded-2xl p-6">
-      <h1 class="text-2xl font-black mb-4">คำถามที่พบบ่อย</h1>
-      <ul class="space-y-3 text-slate-600 list-disc pl-5">
-        <li>จองตั๋วแล้วสามารถเปลี่ยนรอบได้หรือไม่: ขึ้นอยู่กับเงื่อนไขของรอบฉาย</li>
-        <li>ชำระเงินแล้วไม่ได้รับตั๋ว: กรุณาตรวจสอบหน้า Booking Confirmation หรือ ติดต่อฝ่ายบริการลูกค้า</li>
-        <li>ต้องมาถึงก่อนฉายกี่นาที: แนะนำอย่างน้อย 15 นาที</li>
-      </ul>
+
+<main class="flex-grow">
+  <section class="info-hero">
+    <div class="info-hero-in">
+      <span class="info-eyebrow"><span class="material-symbols-outlined">help</span>ศูนย์ช่วยเหลือ</span>
+      <h1>คำถามที่พบบ่อย</h1>
+      <p class="lead">รวมคำตอบเรื่องการจอง การชำระเงิน ตั๋ว และคะแนนสะสม ตัวเลขในหน้านี้อัปเดตตามการตั้งค่าล่าสุดของระบบ</p>
+      <div class="meta"><span><span class="material-symbols-outlined">quiz</span>23 คำถาม</span><span><span class="material-symbols-outlined">category</span>5 หมวด</span></div>
     </div>
-  </main>
+  </section>
+  <div class="info-wrap">
+    <div class="info-card">
+      <div class="faq-tools">
+        <label class="faq-search"><span class="material-symbols-outlined">search</span><input id="faq-q" type="search" placeholder="พิมพ์คำถาม เช่น คืนเงิน, ที่นั่ง, คะแนน" aria-label="ค้นหาคำถาม"></label>
+        <div class="faq-cats" id="faq-cats" role="group" aria-label="หมวดคำถาม"><button type="button" data-cat="all" aria-pressed="true">ทั้งหมด</button><button type="button" data-cat="booking" aria-pressed="false">การจองและที่นั่ง</button><button type="button" data-cat="payment" aria-pressed="false">การชำระเงินและการคืนเงิน</button><button type="button" data-cat="ticket" aria-pressed="false">ตั๋วและการเข้าชม</button><button type="button" data-cat="member" aria-pressed="false">สมาชิกและคะแนนสะสม</button><button type="button" data-cat="account" aria-pressed="false">บัญชีผู้ใช้</button></div>
+      </div>
+      <div id="faq-list"><div class="faq-group" id="booking" data-group="booking"><h2><span class="material-symbols-outlined">event_seat</span>การจองและที่นั่ง</h2><details class="faq-item"><summary>จองตั๋วต้องทำอย่างไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">เลือกภาพยนตร์ → เลือกวันและรอบฉาย → เลือกที่นั่งจากผังโรง → ชำระเงิน แล้วรับตั๋ว QR ได้ทันที ต้องเข้าสู่ระบบก่อนเลือกที่นั่ง (สมัครฟรีและได้คะแนนต้อนรับ)</div></details><details class="faq-item"><summary>เลือกที่นั่งแล้ว ที่นั่งจะถูกเก็บไว้ให้นานแค่ไหน<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ระบบล็อกที่นั่งไว้ให้คุณ <b data-fill="holdMinutes">12</b> นาทีนับจากกดไปชำระเงิน ระหว่างนี้คนอื่นจองที่นั่งเดียวกันไม่ได้ เมื่อไปหน้าชำระเงินของ Stripe ระบบจะต่อเวลาให้ประมาณ 30 นาที ถ้าหมดเวลาโดยยังไม่จ่าย ที่นั่งจะถูกปล่อยคืนอัตโนมัติ</div></details><details class="faq-item"><summary>จองได้ครั้งละกี่ที่นั่ง<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">สูงสุด 10 ที่นั่งต่อการจอง 1 ครั้ง ถ้ามากันหลายคน แยกจองหลายครั้งได้</div></details><details class="faq-item"><summary>ที่นั่งแต่ละแบบราคาเท่าไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">โซฟาคู่ VIP (แถว A) <b data-fill="seatPrices.Sofa Pair" data-format="money">฿500</b> • พรีเมียม (แถว B) <b data-fill="seatPrices.Premium" data-format="money">฿350</b> • ที่นั่งปกติ (แถว C–D) <b data-fill="seatPrices.Regular" data-format="money">฿240</b> ต่อที่นั่ง และมีค่าบริการ <b data-fill="serviceFeePerSeat" data-format="money">฿20</b> ต่อที่นั่ง ราคาทั้งหมดแสดงก่อนกดจ่ายเสมอ</div></details><details class="faq-item"><summary>เปลี่ยนรอบหรือเปลี่ยนที่นั่งหลังชำระเงินได้ไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ตอนนี้ยังเปลี่ยนเองทางออนไลน์ไม่ได้ ถ้ามีเหตุจำเป็น กรุณา<a href="contact.html">ติดต่อเจ้าหน้าที่</a>พร้อมเลขการจอง</div></details></div><div class="faq-group" id="payment" data-group="payment"><h2><span class="material-symbols-outlined">credit_card</span>การชำระเงินและการคืนเงิน</h2><details class="faq-item"><summary>ชำระเงินได้ช่องทางไหนบ้าง<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ชำระผ่าน Stripe ด้วยบัตรเครดิต/เดบิต และช่องทางอื่นที่แสดงในหน้าชำระเงิน เช่น พร้อมเพย์ ราคาเป็นเงินบาท</div></details><details class="faq-item"><summary>เว็บไซต์เก็บเลขบัตรของฉันไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ไม่เก็บ เลขบัตรกรอกในหน้าของ Stripe โดยตรง เราได้รับแค่ผลการชำระเงิน ช่องทาง และเลข 4 หลักท้ายของบัตรเพื่อแสดงในใบเสร็จ</div></details><details class="faq-item"><summary>จ่ายเงินแล้ว แต่ยังไม่เห็นตั๋ว<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">เปิดหน้า <a href="user.html#history">ตั๋วของฉัน</a> ระบบจะตรวจสถานะกับ Stripe อีกครั้งโดยอัตโนมัติ ถ้าที่นั่งหลุดไประหว่างที่คุณกำลังจ่าย (เช่น จ่ายช้าจนหมดเวลาล็อก) ระบบจะยกเลิกการจองและคืนเงินเต็มจำนวนให้อัตโนมัติ</div></details><details class="faq-item"><summary>ยกเลิกตั๋วและขอคืนเงินได้ไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ตั๋วที่ชำระแล้วไม่สามารถยกเลิกเพื่อคืนเงินได้ ยกเว้นกรณีรอบฉายถูกยกเลิก หรือเจ้าหน้าที่พิจารณาคืนเงินให้ เมื่อคืนเงินแล้ว คะแนนที่ใช้ไปจะได้คืน และคะแนนที่ได้จากการจองนั้นจะถูกหักออก ตั๋วที่สแกนเข้าโรงแล้วยกเลิกไม่ได้</div></details><details class="faq-item"><summary>ใช้โค้ดส่วนลดอย่างไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">กรอกโค้ดในหน้าชำระเงินแล้วกด "ใช้โค้ด" แต่ละบัญชีใช้แต่ละโค้ดได้ 1 ครั้ง บางโค้ดใช้ได้เฉพาะบางวันในสัปดาห์ ช่วงวันที่ หรือมีจำนวนสิทธิ์จำกัด ดูโค้ดที่ใช้ได้ที่หน้า <a href="promotions.html">โปรโมชั่น</a></div></details><details class="faq-item"><summary>เว็บไซต์นี้ตัดเงินจริงไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ไม่ตัดเงินจริง เว็บไซต์นี้เป็นโปรเจกต์เพื่อการศึกษา Stripe ทำงานในโหมดทดสอบ ใช้บัตรทดสอบเลข 4242 4242 4242 4242 วันหมดอายุในอนาคตใดก็ได้ และ CVC 3 หลักใดก็ได้</div></details></div><div class="faq-group" id="ticket" data-group="ticket"><h2><span class="material-symbols-outlined">qr_code_2</span>ตั๋วและการเข้าชม</h2><details class="faq-item"><summary>ตั๋วของฉันอยู่ที่ไหน<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">หลังชำระเงิน ตั๋วจะแสดงทันทีพร้อม QR Code และเก็บไว้ในเมนูบัญชี → <a href="user.html#history">ตั๋วของฉัน</a> กด "บันทึกตั๋ว" เพื่อเก็บเป็นรูปภาพไว้ใช้ตอนไม่มีอินเทอร์เน็ตได้</div></details><details class="faq-item"><summary>เข้าโรงภาพยนตร์อย่างไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">แสดง QR Code ให้เจ้าหน้าที่หน้าโรงสแกน QR แต่ละใบใช้เข้าชมได้ครั้งเดียว หลังสแกนแล้วสถานะตั๋วจะเปลี่ยนเป็น "ใช้แล้ว"</div></details><details class="faq-item"><summary>ควรมาถึงก่อนเวลาฉายกี่นาที<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">แนะนำให้มาถึงอย่างน้อย 15 นาที เพื่อสแกนตั๋วและซื้อเครื่องดื่มได้ทันก่อนหนังเริ่ม</div></details><details class="faq-item"><summary>เรตภาพยนตร์มีผลกับการเข้าชมไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ภาพยนตร์เรต 18+ และ 20+ จำกัดอายุผู้ชม เจ้าหน้าที่อาจขอดูบัตรประชาชนก่อนเข้าโรง กรุณาเลือกรอบให้เหมาะกับผู้ชมทุกคน</div></details></div><div class="faq-group" id="member" data-group="member"><h2><span class="material-symbols-outlined">stars</span>สมาชิกและคะแนนสะสม</h2><details class="faq-item"><summary>สมัครสมาชิกแล้วได้อะไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">รับ <b data-fill="loyalty.signupBonus" data-format="number">250</b> คะแนนทันที ดูประวัติการจองและตั๋วทั้งหมดได้ในที่เดียว และเก็บหนังที่ "อยากดู" ไว้ได้</div></details><details class="faq-item"><summary>ได้คะแนนจากอะไรบ้าง<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ทุกการจองที่ชำระเงินสำเร็จได้ <b data-fill="loyalty.pointsEarnedPerBooking">50</b> คะแนน ไม่ว่าจะจองกี่ที่นั่ง</div></details><details class="faq-item"><summary>แลกคะแนนอย่างไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ในหน้าชำระเงิน เปิดสวิตช์ "ใช้คะแนนแลกส่วนลด" ใช้ <b data-fill="loyalty.pointsRequired">80</b> คะแนน ลดได้ <b data-fill="loyalty.pointDiscount" data-format="money">฿30</b> ใช้ได้ 1 ครั้งต่อการจอง และใช้ร่วมกับโค้ดส่วนลดได้</div></details><details class="faq-item"><summary>คะแนนหมดอายุไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ไม่มีวันหมดอายุ ตราบใดที่บัญชียังใช้งานอยู่ ดูรายละเอียดระดับสมาชิกได้ที่ <a href="membership.html">สิทธิพิเศษสมาชิก</a></div></details></div><div class="faq-group" id="account" data-group="account"><h2><span class="material-symbols-outlined">person</span>บัญชีผู้ใช้</h2><details class="faq-item"><summary>สมัครหรือเข้าสู่ระบบอย่างไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">กดปุ่ม "เข้าสู่ระบบ" มุมขวาบน แล้วเลือกสมัครสมาชิกด้วยอีเมลและรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</div></details><details class="faq-item"><summary>ลืมรหัสผ่านทำอย่างไร<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ตอนนี้ยังไม่มีปุ่มรีเซ็ตรหัสผ่านด้วยตัวเอง กรุณา<a href="contact.html">ติดต่อเจ้าหน้าที่</a>จากอีเมลที่ใช้สมัคร</div></details><details class="faq-item"><summary>รายการ "อยากดู" หายเมื่อเปลี่ยนเครื่อง<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">รายการ "อยากดู" เก็บไว้ในเบราว์เซอร์ของเครื่องที่ใช้กดเท่านั้น จึงไม่ตามไปเครื่องอื่น ส่วนตั๋วและคะแนนเก็บในบัญชี เปิดได้ทุกเครื่อง</div></details><details class="faq-item"><summary>ขอดูหรือลบข้อมูลส่วนตัวได้ไหม<span class="material-symbols-outlined">expand_more</span></summary><div class="answer">ได้ ติดต่อเจ้าหน้าที่เพื่อขอสำเนา แก้ไข หรือลบข้อมูล อ่านรายละเอียดได้ใน <a href="privacy-policy.html">นโยบายความเป็นส่วนตัว</a></div></details></div></div>
+      <div class="faq-empty hidden" id="faq-empty"><span class="material-symbols-outlined text-4xl">search_off</span><p class="mt-2">ไม่พบคำถามที่ตรงกับคำค้น ลอง<a class="text-primary font-semibold" href="contact.html">ถามเจ้าหน้าที่</a>ได้เลย</p></div>
+      <div class="info-note pink mt-8"><span class="material-symbols-outlined">support_agent</span><div><b>ยังไม่เจอคำตอบ?</b> ทีมบริการลูกค้าพร้อมช่วย <a class="font-bold underline" href="contact.html">ติดต่อเรา</a></div></div>
+    </div>
+  </div>
+</main>
+
 <footer id="site-footer"></footer>
 <script>cinemaUi.footer();</script>
+<script>
+  (() => {
+    const input = document.getElementById('faq-q');
+    const cats = document.getElementById('faq-cats');
+    let cat = 'all';
+    const apply = () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      document.querySelectorAll('.faq-group').forEach((group) => {
+        let groupShown = 0;
+        group.querySelectorAll('.faq-item').forEach((item) => {
+          const ok = (cat === 'all' || group.dataset.group === cat) && (!q || item.textContent.toLowerCase().includes(q));
+          item.classList.toggle('hidden', !ok);
+          if (ok && q) item.open = true;
+          groupShown += ok ? 1 : 0;
+        });
+        group.classList.toggle('hidden', !groupShown);
+        shown += groupShown;
+      });
+      document.getElementById('faq-empty').classList.toggle('hidden', shown > 0);
+    };
+    input.addEventListener('input', apply);
+    cats.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-cat]');
+      if (!button) return;
+      cat = button.dataset.cat;
+      cats.querySelectorAll('[data-cat]').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      apply();
+    });
+    // links such as faq.html#payment open that topic
+    const hash = window.location.hash.slice(1);
+    if (hash && document.querySelector(`[data-group="${CSS.escape(hash)}"]`)) {
+      cats.querySelector(`[data-cat="${CSS.escape(hash)}"]`)?.click();
+      document.querySelector(`[data-group="${CSS.escape(hash)}"] .faq-item`)?.setAttribute('open', '');
+    }
+  })();
+</script>
+<script type="module">
+  import { app, firebaseConfig } from './firebase-init.js';
+  import { initializeAuthUI } from './auth.js';
+  initializeAuthUI(app, firebaseConfig);
+</script>
 </body>
 </html>

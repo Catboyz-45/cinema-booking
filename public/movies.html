@@ -83,7 +83,7 @@
       }
 
       function getPoster(movie) {
-        return movie.posterImage || movie.backdropImage || movie.trailerImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id)}/500/750`;
+        return window.cinemaMovieImages.posterFor(movie);
       }
 
       async function hydrateMoviePosters() {
@@ -147,7 +147,7 @@
         moviesGrid.innerHTML = filteredMovies.map((movie) => `
           <div class="group flex flex-col gap-3 movie-card cursor-pointer" data-movie-id="${movie.id}">
             <div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-slate-200 shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
-              <img alt="${movie.titleThai}" class="w-full h-full object-cover" data-movie-id="${movie.id}" src="${getPoster(movie)}" onerror="this.onerror=null;this.src='https://picsum.photos/seed/${encodeURIComponent(movie.id)}-fallback/500/750';" />
+              <img alt="${movie.titleThai}" class="w-full h-full object-cover" data-movie-id="${movie.id}" src="${getPoster(movie)}" onerror="this.onerror=null;this.src=window.cinemaMovieImages.generatedPoster(moviesDatabase[this.dataset.movieId] || {});" />
               <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button class="buy-ticket-btn bg-primary text-white px-6 py-2 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                   ซื้อตั๋ว

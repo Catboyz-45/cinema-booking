@@ -15,7 +15,7 @@ const {
 } = require("./util");
 const { DEFAULT_PRICING, DEFAULT_PROMOTIONS } = require("./domain");
 
-const SEED_VERSION = 4;
+const SEED_VERSION = 6;
 
 // Garbled synopses from the first version of the sample data → replaced by the text in data/movies-data.js.
 const GARBLED_DESCRIPTIONS = {
@@ -33,6 +33,56 @@ function loadComingSoon() {
   } catch (_error) {
     return [];
   }
+}
+
+function loadCinemaDirectory() {
+  try {
+    // eslint-disable-next-line global-require
+    return require("../data/cinemas.js");
+  } catch (_error) {
+    return [];
+  }
+}
+
+// v5: branch details for the cinemas page. Adds missing branches and fills only empty fields of existing ones.
+async function seedCinemaDirectory(firestore, now) {
+  const entries = loadCinemaDirectory().filter((c) => slugify(c.name));
+  if (!entries.length) return;
+  const refs = entries.map((c) => firestore.collection("cinemas").doc(slugify(c.name)));
+  const snaps = await firestore.getAll(...refs);
+  const batch = firestore.batch();
+  snaps.forEach((snap, index) => {
+    const entry = entries[index];
+    if (!snap.exists) {
+      batch.set(refs[index], {
+        id: refs[index].id, name: entry.name, branch: entry.branch, region: entry.region, systems: entry.systems,
+        image: "", amenities: [], halls: [], distance: "", createdAt: now, updatedAt: now,
+      });
+      return;
+    }
+    const data = snap.data();
+    const patch = {};
+    for (const key of ["branch", "region", "systems"]) if (!data[key] && entry[key]) patch[key] = entry[key];
+    if (Object.keys(patch).length) batch.set(refs[index], patch, { merge: true });
+  });
+  await batch.commit();
+}
+
+// v6: branch photos (Wikimedia Commons, served from /img/branches/) for branches that have no photo yet.
+async function seedBranchPhotos(firestore, now) {
+  const entries = loadCinemaDirectory().filter((c) => c.image && slugify(c.name));
+  if (!entries.length) return;
+  const refs = entries.map((c) => firestore.collection("cinemas").doc(slugify(c.name)));
+  const snaps = await firestore.getAll(...refs);
+  const batch = firestore.batch();
+  let writes = 0;
+  snaps.forEach((snap, index) => {
+    if (!snap.exists || snap.data().image) return; // keep photos the admin uploaded
+    const { image, imageCredit = "", imageCreditUrl = "" } = entries[index];
+    batch.set(refs[index], { image, imageCredit, imageCreditUrl, updatedAt: now }, { merge: true });
+    writes += 1;
+  });
+  if (writes) await batch.commit();
 }
 
 function loadCatalog() {
@@ -92,6 +142,11 @@ async function runSeed(firestore, { logger = console } = {}) {
       updatedAt: now,
     },
   ]));
+
+  // v5: branch directory for the cinemas page (photos are uploaded in the admin).
+  if (fromVersion < 5) await seedCinemaDirectory(firestore, now);
+  // v6: branch photos with credits.
+  if (fromVersion < 6) await seedBranchPhotos(firestore, now);
 
   await metaRef.set({ version: SEED_VERSION, seededAt: now });
   logger.log("Data seed complete.");

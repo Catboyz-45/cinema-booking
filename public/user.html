@@ -149,8 +149,7 @@
 
     function getPosterForBooking(booking) {
       const movieRef = findMovieRef(booking);
-      if (movieRef) return movieRef.posterImage || movieRef.backdropImage || movieRef.trailerImage;
-      return booking.movie?.poster || 'https://picsum.photos/seed/movie-ticket-fallback/500/750';
+      return window.cinemaMovieImages.posterFor(movieRef || { id: booking.movie?.id, titleThai: booking.movie?.title, posterImage: booking.movie?.poster });
     }
 
     async function hydrateUpcomingPosters() {

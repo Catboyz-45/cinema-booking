@@ -256,11 +256,12 @@ const loaders = {
     reports: () => {},
     pricing: loadPricing,
     promotions: loadPromotions,
+    cinemas: loadCinemas,
     users: loadUsers
 };
 
 const PAGE_CRUMBS = {
-    dashboard: 'Cinema Admin', bookings: 'หน้าโรง', movies: 'โปรแกรมฉาย', showtimes: 'โปรแกรมฉาย',
+    dashboard: 'Cinema Admin', bookings: 'หน้าโรง', movies: 'โปรแกรมฉาย', showtimes: 'โปรแกรมฉาย', cinemas: 'โปรแกรมฉาย',
     pricing: 'การขาย', promotions: 'การขาย', reports: 'การขาย', users: 'ระบบ'
 };
 
@@ -293,6 +294,7 @@ async function route() {
         history.replaceState(null, '', `#${active}`);
         if (active === 'movies') openMovieForm();
         if (active === 'showtimes') toggleShowtimeForm(true);
+        if (active === 'cinemas') openCinemaForm();
     }
 }
 
@@ -467,6 +469,7 @@ function renderMoviesTable() {
                 ${poster ? '' : `<span class="noimg">${icon('image')}</span>`}
                 ${badge(status.text, status.className)}
                 ${movie.ageLimit ? `<span class="age">${esc(movie.ageLimit)}</span>` : ''}
+                ${movie.posterImage ? '' : `<span class="need-poster">${icon('add_photo_alternate')}ยังไม่มีโปสเตอร์</span>`}
             </div>
             <div class="meta"><b title="${esc(movie.titleThai)}">${esc(movie.titleThai)}</b><small>${esc(movie.titleEng || '')}</small><small>${esc(meta || '-')}</small></div>
             <div class="actions">
@@ -582,7 +585,7 @@ function movieForm(movie = {}) {
                         ${uploaderHtml('poster', 'posterImage', 'โปสเตอร์ (แนวตั้ง)', movie.posterImage, 'aspect-[2/3]')}
                         <div class="space-y-5">
                             ${uploaderHtml('backdrop', 'backdropImage', 'ภาพพื้นหลัง (แนวนอน)', movie.backdropImage, 'aspect-video')}
-                            <div class="mf-tip">${icon('lightbulb')}<p>รองรับ JPG, PNG, WebP ระบบย่อรูปให้อัตโนมัติ<br>ไม่ใส่โปสเตอร์ก็ได้ ระบบจะลองหาให้จากชื่อภาษาอังกฤษ</p></div>
+                            <div class="mf-tip">${icon('lightbulb')}<p>รองรับ JPG, PNG, WebP ระบบย่อรูปให้อัตโนมัติ<br>ถ้าไม่มีโปสเตอร์ หน้าเว็บจะใช้ภาพพื้นหลังแทน</p></div>
                         </div>
                     </div>
                 </section>
@@ -631,8 +634,8 @@ function movieForm(movie = {}) {
     </form>`;
 }
 
-const IMAGE_URL = /^(https:\/\/\S+|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/\S+)$/i;
-const IMAGE_LIMITS = { poster: [800, 1200], backdrop: [1600, 900], trailer: [1600, 900], cast: [400, 400] };
+const IMAGE_URL = /^(https:\/\/\S+|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/\S+|\/img\/[A-Za-z0-9/_-]+\.(jpe?g|png|webp|svg))$/i; // https, local uploads, or pictures shipped with the site
+const IMAGE_LIMITS = { poster: [800, 1200], backdrop: [1600, 900], trailer: [1600, 900], cast: [400, 400], cinema: [1200, 900] };
 const MAX_UPLOAD_BYTES = 650 * 1024;
 
 function uploaderHtml(key, name, label, value, aspect) {
@@ -2437,6 +2440,246 @@ $('#promotions-table').addEventListener('click', async (event) => {
         if (!result) return;
         toast(result.message || 'ลบโค้ดแล้ว');
         loadPromotions();
+    }
+});
+
+// ---------------------------------------------------------------------------
+// cinemas / branches
+// ---------------------------------------------------------------------------
+const CINEMA_REGIONS = ['กรุงเทพฯและปริมณฑล', 'ภาคกลาง', 'ภาคเหนือ', 'ภาคตะวันออกเฉียงเหนือ', 'ภาคตะวันออก', 'ภาคตะวันตก', 'ภาคใต้'];
+const CINEMA_SYSTEMS = ['IMAX', '4DX', 'MX4D', 'Laser', 'Dolby Atmos', 'VIP', 'Kids Cinema', 'Digital Cinema', '3D'];
+const CINEMA_AMENITIES = ['ที่จอดรถ', 'ร้านอาหาร', 'Wi-Fi', 'ทางลาดวีลแชร์', 'ห้องน้ำ', 'ตู้ซื้อตั๋ว'];
+let cinemaFilter = 'all';
+
+async function loadCinemas() {
+    loading($('#cinemas-table'));
+    try {
+        cinemasCache = await api.request('/api/admin/cinemas');
+    } catch (error) {
+        toast(error.message, 'error');
+        return;
+    }
+    resetPage('cinemas');
+    renderCinemas();
+}
+
+const splitSystems = (text) => String(text || '').split(/\s*[•,|]\s*/).map((s) => s.trim()).filter(Boolean);
+
+function renderCinemas() {
+    const keyword = $('#cinema-search').value.trim().toLowerCase();
+    const counts = { all: cinemasCache.length, nophoto: cinemasCache.filter((c) => !c.image).length };
+    const regions = CINEMA_REGIONS.filter((r) => cinemasCache.some((c) => c.region === r));
+    if (cinemaFilter !== 'all' && cinemaFilter !== 'nophoto' && !regions.includes(cinemaFilter)) cinemaFilter = 'all';
+    $('#cinema-filter').innerHTML = [
+        ['all', 'ทั้งหมด', counts.all],
+        ...regions.map((r) => [r, r.replace('และปริมณฑล', ''), cinemasCache.filter((c) => c.region === r).length]),
+        ['nophoto', 'ยังไม่มีรูป', counts.nophoto]
+    ].map(([value, text, count]) => `<button type="button" data-filter="${esc(value)}" aria-pressed="${value === cinemaFilter}">${esc(text)}<span class="count">${count}</span></button>`).join('');
+
+    const rows = cinemasCache.filter((c) => {
+        if (cinemaFilter === 'nophoto' && c.image) return false;
+        if (cinemaFilter !== 'all' && cinemaFilter !== 'nophoto' && c.region !== cinemaFilter) return false;
+        return !keyword || `${c.name} ${c.branch} ${c.region}`.toLowerCase().includes(keyword);
+    });
+    if (!rows.length) {
+        $('#cinemas-table').innerHTML = `<div class="card">${emptyState(cinemasCache.length ? 'ไม่พบสาขาที่ตรงกับการค้นหา' : 'ยังไม่มีสาขา', 'storefront', cinemasCache.length ? '' : 'กด "เพิ่มสาขา" เพื่อเริ่ม')}</div>`;
+        return;
+    }
+    const pg = paginate('cinemas', rows);
+    $('#cinemas-table').innerHTML = `<div class="branch-grid">${pg.rows.map((c) => `
+        <article class="card branch-card">
+            <div class="branch-photo" data-edit-cinema="${esc(c.id)}" role="button" tabindex="0" aria-label="แก้ไข ${esc(c.name)}"
+                ${c.image ? `style="background-image:url('${esc(c.image).replace(/'/g, '%27')}')"` : ''}>
+                ${c.image ? '' : `<span class="noimg">${icon('add_photo_alternate')}<small>ยังไม่มีรูป</small></span>`}
+                ${c.region ? `<span class="pill plain branch-region">${esc(c.region)}</span>` : ''}
+            </div>
+            <div class="meta">
+                <b title="${esc(c.name)}">${esc(c.name)}</b>
+                <small>${esc(c.branch || 'ยังไม่ระบุที่ตั้ง')}</small>
+                <div class="branch-stats">
+                    <span>${icon('meeting_room')}${(c.halls || []).length} โรง</span>
+                    <span>${icon('event')}${c.upcomingShowtimes ? `${c.upcomingShowtimes} รอบที่จะฉาย` : 'ไม่มีรอบฉาย'}</span>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-ghost btn-sm" data-edit-cinema="${esc(c.id)}" type="button">${icon('edit')}แก้ไข</button>
+                <button class="btn btn-danger btn-sm btn-icon" data-delete-cinema="${esc(c.id)}" type="button" title="ลบ" aria-label="ลบ ${esc(c.name)}">${icon('delete')}</button>
+            </div>
+        </article>`).join('')}</div>${pg.pager}`;
+}
+pageRenderers.cinemas = renderCinemas;
+
+function cinemaForm(c = {}) {
+    const systems = new Set(splitSystems(c.systems));
+    const systemOptions = [...new Set([...CINEMA_SYSTEMS, ...systems])];
+    const amenities = new Set(c.amenities || []);
+    const amenityOptions = [...new Set([...CINEMA_AMENITIES, ...amenities])];
+    return `<form id="cinema-form" class="mf" novalidate>
+        <div class="mf-layout">
+            <div class="mf-main space-y-6">
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div><label class="label" for="cf-name">ชื่อสาขา <span class="text-rose-600">*</span></label>
+                        <input class="field" id="cf-name" value="${esc(c.name || '')}" maxlength="80" placeholder="เช่น Major Cineplex Bangna" autocomplete="off" ${c.id ? 'readonly' : ''}>
+                        <p class="hint">${c.id ? 'ชื่อสาขาใช้อ้างอิงในรอบฉาย จึงแก้ไขไม่ได้' : 'ภาษาอังกฤษ ใช้ตอนเลือกสาขาในรอบฉาย'}</p></div>
+                    <div><label class="label" for="cf-branch">ที่ตั้ง</label>
+                        <input class="field" id="cf-branch" value="${esc(c.branch || '')}" maxlength="120" placeholder="เช่น Bangna, Bangkok"></div>
+                    <div><label class="label" for="cf-region">ภูมิภาค</label>
+                        <select class="field" id="cf-region"><option value="">ไม่ระบุ</option>${CINEMA_REGIONS.map((r) => `<option value="${esc(r)}" ${r === c.region ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></div>
+                </div>
+                <div class="max-w-xs">${uploaderHtml('cinema', 'image', 'รูปสาขา (แนวนอน)', c.image, 'aspect-[4/3]')}
+                    ${c.imageCredit ? `<p class="hint" id="cf-credit">${icon('copyright', 'text-sm align-middle')} ภาพ: ${c.imageCreditUrl ? `<a class="underline" href="${esc(c.imageCreditUrl)}" target="_blank" rel="noopener">${esc(c.imageCredit)}</a>` : esc(c.imageCredit)} • เปลี่ยนรูปแล้วเครดิตนี้จะถูกลบ</p>` : ''}</div>
+                <div><span class="label">ระบบฉายที่มี</span>
+                    <div class="flex flex-wrap gap-2" id="cf-systems">
+                        ${systemOptions.map((s) => `<button type="button" class="chip" data-system="${esc(s)}" aria-pressed="${systems.has(s)}">${esc(s)}</button>`).join('')}
+                    </div></div>
+                <div><span class="label">โรงย่อย <span class="font-normal text-slate-500">(ใช้ตอนสร้างรอบฉาย)</span></span>
+                    <div class="flex flex-wrap gap-2" id="cf-halls"></div>
+                    <span class="mf-genre-new mt-2"><input id="cf-hall-new" placeholder="+ โรงย่อยใหม่ เช่น Hall 3" aria-label="เพิ่มโรงย่อย"><button type="button" id="cf-hall-add" aria-label="เพิ่มโรงย่อย">${icon('add')}</button></span></div>
+                <div><span class="label">สิ่งอำนวยความสะดวก</span>
+                    <div class="flex flex-wrap gap-2" id="cf-amenities">
+                        ${amenityOptions.map((a) => `<button type="button" class="chip" data-amenity="${esc(a)}" aria-pressed="${amenities.has(a)}">${esc(a)}</button>`).join('')}
+                    </div></div>
+            </div>
+            <aside class="mf-preview" id="cf-preview" aria-label="ตัวอย่างการ์ดสาขา">
+                <p class="mf-preview-label">${icon('visibility')}ตัวอย่างในหน้าโรงภาพยนตร์</p>
+                <div class="pv-branch">
+                    <div class="pv-branch-photo" id="cf-pv-photo"><span class="pv-branch-noimg">${icon('storefront')}</span><b id="cf-pv-region"></b></div>
+                    <h5 id="cf-pv-name"></h5>
+                    <p id="cf-pv-branch"></p>
+                    <p class="pv-branch-sys" id="cf-pv-systems"></p>
+                </div>
+                <div class="mf-tip mt-5">${icon('lightbulb')}<p>รูปแนวนอน 4:3 สวยที่สุด เช่น ด้านหน้าห้าง หรือโถงโรงหนัง • ระบบย่อรูปให้อัตโนมัติ</p></div>
+            </aside>
+        </div>
+        <div class="modal-actions mf-actions">
+            <button class="btn btn-ghost btn-sm mf-preview-toggle" type="button" id="cf-preview-toggle" aria-expanded="false" aria-controls="cf-preview">${icon('visibility')}ตัวอย่าง</button>
+            <span class="mf-keyhint"></span>
+            <button class="btn btn-ghost" type="button" data-close-modal>ยกเลิก</button>
+            <button class="btn btn-primary" type="submit">${icon('save')}${c.id ? 'บันทึกการแก้ไข' : 'เพิ่มสาขา'}</button>
+        </div>
+    </form>`;
+}
+
+function openCinemaForm(cinema = null) {
+    const c = cinema || {};
+    openModal(cinema ? cinema.name : 'เพิ่มสาขาใหม่', cinemaForm(c), {
+        wide: true,
+        sub: cinema ? `แก้ไขสาขา${cinema.upcomingShowtimes ? ` • มีรอบที่จะฉาย ${cinema.upcomingShowtimes} รอบ` : ''}` : 'ใส่ข้อมูลและรูปสาขา แล้วกดเพิ่มสาขา'
+    });
+    const form = $('#cinema-form');
+    form.querySelector('[data-close-modal]').addEventListener('click', closeModal);
+    let halls = [...(c.halls || [])];
+
+    const renderHalls = () => {
+        halls.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        $('#cf-halls').innerHTML = halls.length
+            ? halls.map((h) => `<span class="chip" aria-pressed="true">${esc(h)}<button class="x" type="button" data-remove-hall="${esc(h)}" aria-label="ลบ ${esc(h)}">×</button></span>`).join('')
+            : '<span class="hint mt-0">ยังไม่มีโรงย่อย</span>';
+    };
+    const addHall = () => {
+        const value = $('#cf-hall-new').value.trim();
+        if (!value) return;
+        if (!halls.includes(value)) halls.push(value);
+        $('#cf-hall-new').value = '';
+        renderHalls();
+    };
+    const read = () => ({
+        name: $('#cf-name').value.trim(),
+        branch: $('#cf-branch').value.trim(),
+        region: $('#cf-region').value,
+        image: $('#mf-cinema').value.trim(),
+        systems: [...form.querySelectorAll('[data-system][aria-pressed="true"]')].map((b) => b.dataset.system).join(' • '),
+        amenities: [...form.querySelectorAll('[data-amenity][aria-pressed="true"]')].map((b) => b.dataset.amenity),
+        halls
+    });
+    const preview = () => {
+        const data = read();
+        const ok = IMAGE_URL.test(data.image);
+        $('#cf-pv-photo').style.backgroundImage = ok ? `url("${data.image.replace(/"/g, '%22')}")` : '';
+        $('#cf-pv-photo').classList.toggle('has-image', ok);
+        $('#cf-pv-region').textContent = data.region || 'ภูมิภาค';
+        $('#cf-pv-name').textContent = data.name || 'ชื่อสาขา';
+        $('#cf-pv-name').classList.toggle('is-empty', !data.name);
+        $('#cf-pv-branch').textContent = data.branch || 'ที่ตั้ง';
+        $('#cf-pv-systems').textContent = data.systems || 'ระบบฉาย';
+    };
+
+    form.addEventListener('click', (event) => {
+        const toggle = event.target.closest('[data-system], [data-amenity]');
+        if (toggle) toggle.setAttribute('aria-pressed', String(toggle.getAttribute('aria-pressed') !== 'true'));
+        const remove = event.target.closest('[data-remove-hall]');
+        if (remove) { halls = halls.filter((h) => h !== remove.dataset.removeHall); renderHalls(); }
+        requestAnimationFrame(preview);
+    });
+    form.addEventListener('input', preview);
+    form.addEventListener('change', preview);
+    $('#cf-hall-add').addEventListener('click', addHall);
+    $('#cf-hall-new').addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); addHall(); } });
+    $('#cf-preview-toggle').addEventListener('click', () => {
+        const open = $('#cf-preview').classList.toggle('open');
+        $('#cf-preview-toggle').setAttribute('aria-expanded', String(open));
+        $('#cf-preview-toggle').innerHTML = `${icon(open ? 'visibility_off' : 'visibility')}${open ? 'ซ่อนตัวอย่าง' : 'ตัวอย่าง'}`;
+    });
+    bindUploader('cinema');
+    renderHalls();
+    preview();
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearFieldErrors(form);
+        const body = read();
+        if (!body.name) {
+            showFieldError($('#cf-name'), 'กรุณากรอกชื่อสาขา');
+            $('#cf-name').focus();
+            return;
+        }
+        if (!cinema && !/[A-Za-z0-9]/.test(body.name)) {
+            showFieldError($('#cf-name'), 'ชื่อสาขาต้องมีตัวอักษรภาษาอังกฤษหรือตัวเลขอย่างน้อย 1 ตัว');
+            $('#cf-name').focus();
+            return;
+        }
+        const saved = await withButton(form.querySelector('[type=submit]'), () => (cinema
+            ? api.request(`/api/admin/cinemas/${encodeURIComponent(cinema.id)}`, { method: 'PUT', body })
+            : api.request('/api/admin/cinemas', { method: 'POST', body })));
+        if (!saved) return;
+        closeModal();
+        toast(cinema ? 'บันทึกสาขาแล้ว' : `เพิ่มสาขา ${saved.name} แล้ว`);
+        loadCinemas();
+    });
+}
+
+$('#cinema-add-btn').addEventListener('click', () => openCinemaForm());
+$('#cinema-search').addEventListener('input', () => { resetPage('cinemas'); renderCinemas(); });
+$('#cinema-filter').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    cinemaFilter = button.dataset.filter;
+    resetPage('cinemas');
+    renderCinemas();
+});
+$('#cinemas-table').addEventListener('keydown', (event) => {
+    if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('.branch-photo[data-edit-cinema]')) {
+        event.preventDefault();
+        event.target.click();
+    }
+});
+$('#cinemas-table').addEventListener('click', async (event) => {
+    const editId = event.target.closest('[data-edit-cinema]')?.dataset.editCinema;
+    const deleteId = event.target.closest('[data-delete-cinema]')?.dataset.deleteCinema;
+    if (editId) openCinemaForm(cinemasCache.find((c) => c.id === editId));
+    if (deleteId) {
+        const cinema = cinemasCache.find((c) => c.id === deleteId);
+        const ok = await confirmDialog({
+            title: `ลบสาขา "${cinema.name}" ?`,
+            message: 'ลบได้เฉพาะสาขาที่ไม่เคยมีรอบฉาย รูปของสาขาจะถูกลบไปด้วย',
+            confirmText: 'ลบสาขา',
+            danger: true
+        });
+        if (!ok) return;
+        const result = await withButton(event.target, () => api.request(`/api/admin/cinemas/${encodeURIComponent(deleteId)}`, { method: 'DELETE' }));
+        if (!result) return;
+        toast('ลบสาขาแล้ว');
+        loadCinemas();
     }
 });
 

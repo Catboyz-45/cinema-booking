@@ -52,9 +52,12 @@ function isHttpsUrl(value) {
   return value === "" || /^https:\/\/[^\s"'<>]+$/i.test(value);
 }
 
-// Movie images: any https URL, or an image uploaded to this API on a local dev server.
+// Images: any https URL, an image uploaded to this API on a local dev server,
+// or a picture shipped with the website (/img/...).
 function isImageUrl(value) {
-  return isHttpsUrl(value) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/api\/images\/[A-Za-z0-9_-]+$/i.test(value);
+  return isHttpsUrl(value)
+    || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/api\/images\/[A-Za-z0-9_-]+$/i.test(value)
+    || /^\/img\/[A-Za-z0-9/_-]+\.(jpe?g|png|webp|svg)$/i.test(value);
 }
 
 // ---- uploaded images (stored in Firestore, served by GET /api/images/:id) ----
@@ -66,6 +69,41 @@ const IMAGE_SIGNATURES = {
 };
 const IMAGE_ID_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 const uploadedImageId = (url) => (/\/api\/images\/([A-Za-z0-9_-]{16,64})$/.exec(String(url || "")) || [])[1] || null;
+
+// ---- cinemas (branches) ----
+const CINEMA_REGIONS = ["กรุงเทพฯและปริมณฑล", "ภาคกลาง", "ภาคเหนือ", "ภาคตะวันออกเฉียงเหนือ", "ภาคตะวันออก", "ภาคตะวันตก", "ภาคใต้"];
+const uniqueList = (value, maxItems, maxLength) => [...new Set((Array.isArray(value) ? value : [])
+  .map((item) => cleanString(item, maxLength)).filter(Boolean))].slice(0, maxItems);
+
+function presentCinema(data = {}) {
+  return {
+    id: data.id,
+    name: data.name || "",
+    branch: data.branch || "",
+    region: data.region || "",
+    systems: data.systems || "",
+    image: data.image || "",
+    imageCredit: data.image ? data.imageCredit || "" : "",
+    imageCreditUrl: data.image ? data.imageCreditUrl || "" : "",
+    amenities: data.amenities || [],
+    halls: [...(data.halls || [])].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+  };
+}
+
+function parseCinemaInput(body = {}) {
+  const image = cleanString(body.image, 500);
+  if (image && !isImageUrl(image)) throw new HttpError(400, "รูปสาขาไม่ถูกต้อง");
+  const region = cleanString(body.region, 40);
+  if (region && !CINEMA_REGIONS.includes(region)) throw new HttpError(400, "ภูมิภาคไม่ถูกต้อง");
+  return {
+    branch: cleanString(body.branch, 120),
+    region,
+    systems: cleanString(body.systems, 120),
+    image,
+    amenities: uniqueList(body.amenities, 12, 30),
+    halls: uniqueList(body.halls, 30, 30),
+  };
+}
 
 function createApp({ firestore, verifyIdToken, payments = null, adminEmails = process.env.ADMIN_EMAILS, logger = console }) {
   const app = express();
@@ -251,6 +289,14 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     res.json({ today, dates: dateRange(today, addDays(today, CATALOG_DAYS - 1)), movies: list });
   }));
 
+  api.get("/cinemas", asyncHandler(async (_req, res) => {
+    const snaps = await col("cinemas").get();
+    const list = snaps.docs.map((doc) => presentCinema({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => (CINEMA_REGIONS.indexOf(a.region) + 1 || 99) - (CINEMA_REGIONS.indexOf(b.region) + 1 || 99) || a.name.localeCompare(b.name));
+    res.set("Cache-Control", "public, max-age=60");
+    res.json({ regions: CINEMA_REGIONS, cinemas: list });
+  }));
+
   api.get("/movies", asyncHandler(async (_req, res) => {
     const movies = await getMoviesMap();
     res.json(Object.values(movies).filter((m) => m.status !== "archived"));
@@ -272,9 +318,12 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     const today = todayInBangkok();
     res.json(snaps.docs.map((d) => d.data())
       .filter((p) => !p.endDate || p.endDate >= today)
-      .map(({ code, description, discountType, discountValue, daysOfWeek, startDate, endDate }) => ({
+      .map(({ code, description, discountType, discountValue, daysOfWeek, startDate, endDate, totalLimit, usedCount }) => ({
         code, description, discountType, discountValue, daysOfWeek, startDate, endDate,
-      })));
+        // only how many are left (null = unlimited); usage counts stay private
+        remaining: Number(totalLimit) > 0 ? Math.max(0, Number(totalLimit) - Number(usedCount || 0)) : null,
+      }))
+      .filter((p) => p.remaining !== 0));
   }));
 
   api.get("/showtimes/:showtimeId", asyncHandler(async (req, res) => {
@@ -608,10 +657,76 @@ function createApp({ firestore, verifyIdToken, payments = null, adminEmails = pr
     return res.json({ ok: true, deleted: true, deletedShowtimes: showtimes.size });
   }));
 
-  // ---- cinemas (used by the showtime form) ----
+  // ---- cinemas / branches (also used by the showtime form) ----
+  // Showtimes refer to a branch by its name, so the name cannot change once the branch exists.
+  async function showtimesOfCinema(name) {
+    const snaps = await col("showtimes").where("cinema", "==", name).get();
+    return snaps.docs.map((doc) => doc.data());
+  }
+
   admin.get("/cinemas", asyncHandler(async (_req, res) => {
-    const snaps = await col("cinemas").get();
-    res.json(snaps.docs.map((d) => d.data()).sort((a, b) => a.name.localeCompare(b.name)));
+    const today = todayInBangkok();
+    const [snaps, upcoming] = await Promise.all([
+      col("cinemas").get(),
+      col("showtimes").where("date", ">=", today).get(),
+    ]);
+    const counts = {};
+    upcoming.docs.forEach((doc) => {
+      const st = doc.data();
+      if ((st.status || "active") === "active") counts[st.cinema] = (counts[st.cinema] || 0) + 1;
+    });
+    res.json(snaps.docs
+      .map((doc) => ({ ...doc.data(), ...presentCinema({ id: doc.id, ...doc.data() }), upcomingShowtimes: counts[doc.data().name] || 0 }))
+      .sort((a, b) => a.name.localeCompare(b.name)));
+  }));
+
+  admin.post("/cinemas", asyncHandler(async (req, res) => {
+    const name = cleanString(req.body?.name, 80);
+    if (!name) throw new HttpError(400, "กรุณากรอกชื่อสาขา");
+    const id = slugify(name);
+    if (!id) throw new HttpError(400, "ชื่อสาขาต้องมีตัวอักษรภาษาอังกฤษหรือตัวเลขอย่างน้อย 1 ตัว");
+    const ref = col("cinemas").doc(id);
+    const sameName = await col("cinemas").where("name", "==", name).limit(1).get();
+    if ((await ref.get()).exists || !sameName.empty) throw new HttpError(409, `มีสาขาชื่อ ${name} อยู่แล้ว`);
+    const now = new Date().toISOString();
+    const doc = { id, name, ...parseCinemaInput(req.body), distance: "", createdAt: now, updatedAt: now };
+    await ref.set(doc);
+    res.status(201).json(presentCinema(doc));
+  }));
+
+  admin.put("/cinemas/:cinemaId", asyncHandler(async (req, res) => {
+    const ref = col("cinemas").doc(req.params.cinemaId);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpError(404, "ไม่พบสาขานี้");
+    const current = snap.data();
+    if (req.body?.name !== undefined && cleanString(req.body.name, 80) !== current.name) {
+      throw new HttpError(400, "เปลี่ยนชื่อสาขาไม่ได้ เพราะรอบฉายอ้างอิงด้วยชื่อนี้");
+    }
+    const next = parseCinemaInput(req.body);
+    const removedHalls = (current.halls || []).filter((hall) => !next.halls.includes(hall));
+    if (removedHalls.length) {
+      const today = todayInBangkok();
+      const busy = (await showtimesOfCinema(current.name))
+        .filter((st) => removedHalls.includes(st.hall) && st.date >= today && (st.status || "active") === "active")
+        .map((st) => st.hall);
+      if (busy.length) throw new HttpError(409, `ลบโรง ${[...new Set(busy)].join(", ")} ไม่ได้ เพราะยังมีรอบฉายที่เปิดขายอยู่`);
+    }
+    const updated = { ...current, ...next, id: snap.id, updatedAt: new Date().toISOString() };
+    if (next.image !== current.image) Object.assign(updated, { imageCredit: "", imageCreditUrl: "" }); // credit belonged to the old photo
+    await ref.set(updated);
+    await deleteUnusedImages({ posterImage: current.image }, { posterImage: next.image });
+    res.json(presentCinema(updated));
+  }));
+
+  admin.delete("/cinemas/:cinemaId", asyncHandler(async (req, res) => {
+    const ref = col("cinemas").doc(req.params.cinemaId);
+    const snap = await ref.get();
+    if (!snap.exists) throw new HttpError(404, "ไม่พบสาขานี้");
+    const used = await showtimesOfCinema(snap.data().name);
+    if (used.length) throw new HttpError(409, `ลบสาขานี้ไม่ได้ เพราะมีรอบฉาย ${used.length} รอบ (รวมรอบที่ผ่านไปแล้ว) อ้างอิงอยู่`);
+    await ref.delete();
+    await deleteUnusedImages({ posterImage: snap.data().image });
+    res.json({ ok: true });
   }));
 
   async function rememberCinemaHall(cinema, hall) {

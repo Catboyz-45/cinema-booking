@@ -1,49 +1,74 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>เงื่อนไขการให้บริการ</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ข้อตกลงการใช้งาน - Cinema</title>
+  <meta name="description" content="ข้อตกลงการใช้บริการจองตั๋วภาพยนตร์ Cinema การชำระเงิน การคืนเงิน โค้ดส่วนลด และคะแนนสะสม"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#e9508c',
-            'background-light': '#f8f6f7',
-            surface: '#ffffff'
-          },
-          fontFamily: {
-            display: ['Inter', 'Noto Sans Thai', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
-<link href="site.css" rel="stylesheet"/>
-<script src="site-ui.js"></script>
+  <link href="site.css" rel="stylesheet"/>
+  <script src="cinema-api.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="info-pages.js"></script>
 </head>
-<body class="flex flex-col bg-background-light font-display text-slate-900 min-h-screen">
+<body class="flex flex-col min-h-screen">
 <header id="site-header"></header>
 <script>cinemaUi.header({});</script>
-  <main class="max-w-3xl mx-auto px-4 py-8">
-    <div class="bg-surface rounded-2xl border border-slate-200 p-6">
-      <h1 class="text-2xl font-black mb-4">เงื่อนไขการให้บริการ</h1>
-      <ul class="space-y-3 text-sm text-slate-700 list-disc pl-5">
-        <li>การชำระเงินสำเร็จเมื่อระบบออกเลขการจองและยืนยันรายการเรียบร้อย</li>
-        <li>ตั๋วภาพยนตร์ที่ชำระเงินแล้วไม่สามารถเปลี่ยนคืนได้ ยกเว้นกรณีรอบฉายถูกยกเลิก</li>
-        <li>ส่วนลดและโค้ดโปรโมชันเป็นไปตามเงื่อนไขที่ระบบกำหนด ณ เวลาชำระเงิน</li>
-        <li>กรุณามาถึงโรงภาพยนตร์ก่อนเวลาอย่างน้อย 15 นาทีเพื่อรับชมได้ตรงรอบ</li>
-      </ul>
+
+<main class="flex-grow">
+  <section class="info-hero">
+    <div class="info-hero-in">
+      <span class="info-eyebrow"><span class="material-symbols-outlined">gavel</span>ข้อกำหนดและเงื่อนไข</span>
+      <h1>ข้อตกลงการใช้งาน</h1>
+      <p class="lead">เงื่อนไขการใช้เว็บไซต์และบริการจองตั๋ว ตั้งแต่การสมัครบัญชี การล็อกที่นั่ง การชำระเงิน จนถึงการคืนเงินและการเข้าชม</p>
+      <div class="meta"><span><span class="material-symbols-outlined">update</span>ปรับปรุงล่าสุด 13 พฤศจิกายน 2569</span><span><span class="material-symbols-outlined">schedule</span>อ่านประมาณ 5 นาที</span></div>
     </div>
-  </main>
+  </section>
+  <div class="info-wrap">
+    <div class="info-note pink mb-6"><span class="material-symbols-outlined">school</span><div>
+<b>เว็บไซต์นี้เป็นโปรเจกต์เพื่อการศึกษา</b> ในรายวิชา 02739322 Information System Analysis and Design
+ข้อมูลภาพยนตร์ รอบฉาย และสาขาเป็นข้อมูลตัวอย่าง การชำระเงินใช้<b>โหมดทดสอบของ Stripe</b> จึงไม่มีการตัดเงินจริง</div></div>
+    <div class="legal-grid">
+      <nav class="toc info-card !p-3" aria-label="สารบัญ"><p>สารบัญ</p><a href="#accept">1. การยอมรับข้อตกลง</a><a href="#account">2. บัญชีผู้ใช้</a><a href="#booking">3. การจองและการล็อกที่นั่ง</a><a href="#payment">4. ราคาและการชำระเงิน</a><a href="#refund">5. การยกเลิกและการคืนเงิน</a><a href="#promo">6. โค้ดส่วนลดและคะแนนสะสม</a><a href="#entry">7. การเข้าชมภาพยนตร์</a><a href="#prohibited">8. ข้อห้ามในการใช้งาน</a><a href="#ip">9. ทรัพย์สินทางปัญญา</a><a href="#liability">10. ข้อจำกัดความรับผิด</a><a href="#changes">11. การเปลี่ยนแปลงข้อตกลง</a><a href="#law">12. กฎหมายที่ใช้บังคับ</a><a href="#contact">13. ติดต่อเรา</a></nav>
+      <article class="info-card prose-info"><section id="accept"><h2><span class="no">1.</span>การยอมรับข้อตกลง</h2><p>ข้อตกลงนี้ใช้กับการใช้งานเว็บไซต์ Cinema ("เว็บไซต์") และบริการจองตั๋วภาพยนตร์ทั้งหมด เมื่อสมัครสมาชิก จองตั๋ว หรือใช้งานเว็บไซต์ ถือว่าคุณได้อ่านและยอมรับข้อตกลงนี้ รวมถึง<a href="privacy-policy.html">นโยบายความเป็นส่วนตัว</a></p>
+<p>ถ้าไม่ยอมรับข้อตกลงข้อใด กรุณางดใช้บริการ</p></section><section id="account"><h2><span class="no">2.</span>บัญชีผู้ใช้</h2><ul><li>ต้องใช้อีเมลที่ใช้งานได้จริงในการสมัคร และให้ข้อมูลที่ถูกต้อง</li>
+<li>คุณต้องเก็บรหัสผ่านเป็นความลับ การกระทำที่เกิดขึ้นผ่านบัญชีของคุณถือเป็นความรับผิดชอบของคุณ</li>
+<li>หากพบการใช้งานบัญชีโดยไม่ได้รับอนุญาต กรุณาแจ้งเราทันทีที่ <a data-contact="email" href="#">support@cinema.local</a></li>
+<li>เราอาจระงับบัญชีที่ใช้งานผิดข้อตกลง เช่น ทุจริตการชำระเงิน หรือใช้โปรแกรมอัตโนมัติจองที่นั่ง</li></ul></section><section id="booking"><h2><span class="no">3.</span>การจองและการล็อกที่นั่ง</h2><ul><li>จองได้สูงสุด 10 ที่นั่งต่อการจอง 1 ครั้ง</li>
+<li>เมื่อกดไปชำระเงิน ระบบจะล็อกที่นั่งไว้ให้ <strong data-fill="holdMinutes">12</strong> นาที และขยายเป็นประมาณ 30 นาทีระหว่างอยู่ในหน้าชำระเงินของ Stripe ถ้าไม่ชำระภายในเวลา ที่นั่งจะถูกปล่อยคืนโดยอัตโนมัติ</li>
+<li>การจองสมบูรณ์เมื่อชำระเงินสำเร็จและระบบออกเลขการจองพร้อมตั๋ว QR เท่านั้น</li>
+<li>รอบฉาย เวลา และระบบฉายอาจเปลี่ยนแปลงได้ ถ้ารอบที่คุณจองถูกยกเลิก เราจะแจ้งและคืนเงินตามข้อ 5</li></ul></section><section id="payment"><h2><span class="no">4.</span>ราคาและการชำระเงิน</h2><ul><li>ราคาแสดงเป็นเงินบาทและรวมภาษีแล้ว ประกอบด้วยราคาที่นั่งตามประเภท และค่าบริการ <strong data-fill="serviceFeePerSeat" data-format="money">฿20</strong> ต่อที่นั่ง ยอดรวมแสดงก่อนชำระเงินทุกครั้ง</li>
+<li>การชำระเงินดำเนินการโดย Stripe ข้อมูลบัตรกรอกในหน้าของ Stripe โดยตรง เว็บไซต์ไม่เห็นและไม่เก็บเลขบัตร</li>
+<li>ถ้าชำระเงินสำเร็จแต่ที่นั่งไม่ว่างแล้ว (เช่น ชำระหลังหมดเวลาล็อก) ระบบจะยกเลิกการจองและคืนเงินเต็มจำนวนโดยอัตโนมัติ</li>
+<li><strong>เว็บไซต์นี้เป็นโปรเจกต์เพื่อการศึกษา</strong> Stripe ทำงานในโหมดทดสอบ จึงไม่มีการเรียกเก็บเงินจริง</li></ul></section><section id="refund"><h2><span class="no">5.</span>การยกเลิกและการคืนเงิน</h2><ol><li>ตั๋วที่ชำระเงินแล้วไม่สามารถยกเลิก เปลี่ยนรอบ หรือขอคืนเงินได้ ยกเว้นกรณีในข้อ 2–3</li>
+<li>กรณีรอบฉายถูกยกเลิกโดยโรงภาพยนตร์ หรือเกิดข้อผิดพลาดของระบบ คุณจะได้รับเงินคืนเต็มจำนวนผ่านช่องทางเดิมที่ชำระ</li>
+<li>กรณีอื่น เจ้าหน้าที่อาจพิจารณาคืนเงินเป็นรายกรณี ติดต่อได้ที่ <a data-contact="email" href="#">support@cinema.local</a> พร้อมเลขการจอง</li>
+<li>เมื่อคืนเงิน คะแนนที่ใช้ไปในการจองนั้นจะได้คืน และคะแนนที่ได้รับจากการจองนั้นจะถูกหักออก</li>
+<li>ตั๋วที่สแกนเข้าโรงแล้วถือว่าใช้บริการแล้ว ยกเลิกหรือคืนเงินไม่ได้</li></ol></section><section id="promo"><h2><span class="no">6.</span>โค้ดส่วนลดและคะแนนสะสม</h2><ul><li>โค้ดส่วนลดแต่ละโค้ดใช้ได้ 1 ครั้งต่อบัญชี และอาจมีเงื่อนไขวันในสัปดาห์ ช่วงวันที่ใช้ได้ หรือจำนวนสิทธิ์รวม</li>
+<li>แลกคะแนนได้ <strong data-fill="loyalty.pointsRequired">80</strong> คะแนนต่อส่วนลด <strong data-fill="loyalty.pointDiscount" data-format="money">฿30</strong> และแลกได้ 1 ครั้งต่อการจอง ส่วนลดรวมจะไม่เกินยอดชำระ</li>
+<li>คะแนนและโค้ดส่วนลดแลกเป็นเงินสดไม่ได้ และโอนให้ผู้อื่นไม่ได้</li>
+<li>เราอาจปรับเงื่อนไขหรือยุติโปรโมชั่นได้ โดยไม่กระทบการจองที่ชำระเงินแล้ว</li></ul></section><section id="entry"><h2><span class="no">7.</span>การเข้าชมภาพยนตร์</h2><ul><li>แสดงตั๋ว QR ให้เจ้าหน้าที่สแกนก่อนเข้าโรง QR แต่ละใบใช้ได้ครั้งเดียว</li>
+<li>ควรมาถึงก่อนเวลาฉายอย่างน้อย 15 นาที ผู้ที่มาหลังภาพยนตร์เริ่มฉายอาจไม่ได้รับอนุญาตให้เข้าชม และไม่สามารถขอคืนเงินได้</li>
+<li>ภาพยนตร์เรต 18+ และ 20+ จำกัดอายุผู้ชม เจ้าหน้าที่มีสิทธิ์ขอตรวจบัตรประชาชน และปฏิเสธการเข้าชมหากอายุไม่ถึงเกณฑ์</li>
+<li>ห้ามบันทึกภาพหรือเสียงภาพยนตร์ภายในโรง</li></ul></section><section id="prohibited"><h2><span class="no">8.</span>ข้อห้ามในการใช้งาน</h2><p>ผู้ใช้ต้องไม่</p><ul><li>ใช้บอทหรือโปรแกรมอัตโนมัติจองหรือกักที่นั่ง</li>
+<li>นำตั๋วไปขายต่อเพื่อการค้าโดยไม่ได้รับอนุญาต</li>
+<li>ใช้ข้อมูลการชำระเงินของผู้อื่นโดยไม่ได้รับอนุญาต</li>
+<li>พยายามเข้าถึงระบบหลังบ้าน แก้ไขราคา หรือรบกวนการทำงานของเว็บไซต์</li></ul></section><section id="ip"><h2><span class="no">9.</span>ทรัพย์สินทางปัญญา</h2><p>เครื่องหมาย การออกแบบ และซอฟต์แวร์ของเว็บไซต์เป็นของผู้พัฒนา ส่วนชื่อภาพยนตร์ โปสเตอร์ และภาพประกอบภาพยนตร์เป็นลิขสิทธิ์ของเจ้าของแต่ละราย ใช้ในเว็บไซต์เพื่อประชาสัมพันธ์รอบฉายเท่านั้น</p></section><section id="liability"><h2><span class="no">10.</span>ข้อจำกัดความรับผิด</h2><p>เราพยายามให้ข้อมูลรอบฉายและราคาถูกต้องเสมอ แต่ไม่รับประกันว่าเว็บไซต์จะทำงานได้ต่อเนื่องโดยไม่มีข้อผิดพลาด ความรับผิดของเราต่อการจองหนึ่งครั้งจำกัดไม่เกินยอดเงินที่คุณชำระสำหรับการจองนั้น เว้นแต่กฎหมายกำหนดไว้เป็นอย่างอื่น</p></section><section id="changes"><h2><span class="no">11.</span>การเปลี่ยนแปลงข้อตกลง</h2><p>เราอาจปรับปรุงข้อตกลงนี้เป็นครั้งคราว ฉบับล่าสุดจะแสดงในหน้านี้พร้อมวันที่ปรับปรุง การใช้งานต่อหลังจากมีการเปลี่ยนแปลงถือว่าคุณยอมรับข้อตกลงฉบับใหม่</p></section><section id="law"><h2><span class="no">12.</span>กฎหมายที่ใช้บังคับ</h2><p>ข้อตกลงนี้อยู่ภายใต้กฎหมายแห่งราชอาณาจักรไทย</p></section><section id="contact"><h2><span class="no">13.</span>ติดต่อเรา</h2><p>สอบถามเกี่ยวกับข้อตกลงนี้ได้ที่ <a data-contact="email" href="#">support@cinema.local</a> หรือโทร <a data-contact="phone" href="#">02-029-9999</a> (<span data-contact="hours">ทุกวัน 10:00–22:00 น.</span>) หรือดูช่องทางอื่นที่หน้า<a href="contact.html">ติดต่อเรา</a></p></section></article>
+    </div>
+  </div>
+</main>
+
 <footer id="site-footer"></footer>
 <script>cinemaUi.footer();</script>
+
+<script type="module">
+  import { app, firebaseConfig } from './firebase-init.js';
+  import { initializeAuthUI } from './auth.js';
+  initializeAuthUI(app, firebaseConfig);
+</script>
 </body>
 </html>

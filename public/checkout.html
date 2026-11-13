@@ -59,7 +59,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
 <link href="site.css" rel="stylesheet"/>
 </head>
-<body class="bg-background-light text-slate-900 min-h-screen flex flex-col font-display antialiased" data-no-bottom-nav>
+<body class="is-loading bg-background-light text-slate-900 min-h-screen flex flex-col font-display antialiased" data-no-bottom-nav>
 <header id="site-header"></header>
 <script>cinemaUi.header({"step": 3, "back": true, "timer": true});</script>
 <!-- Main Content -->
@@ -76,42 +76,42 @@
 </div>
 <div class="p-5">
 <div class="flex gap-4 mb-6">
-<img class="w-24 h-36 object-cover rounded-lg shadow-md flex-shrink-0 bg-slate-200" data-alt="Abstract movie poster with blue and purple gradients representing Avatar" id="summary-movie-poster" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCANR7ambYBR6NXFdSYijpzzYbGMNLe81-D_p3STHCeidvznIriLF52eydEwmMJNUnnmgf2ydgpWSKFWsC69YpHpjXgFN9sbgsFuthwxKBoD7u2ZzhMGBYhJtXmAAPKHXOq11V70Te69Su1RV13Ret1Wt8nmCT10nyjCl_m51WeU2vDidDlwHq5Bws5XmOmy5arPF1HeNBXLoYbO7_V-sbZSf9so43ybVebWdDHxsStSf1gv7q2UlNxDS7kmQLHzz6eWaYlDyximxJN"/>
+<img alt="" class="w-24 h-36 object-cover rounded-lg shadow-md flex-shrink-0 bg-slate-200" id="summary-movie-poster" data-skel/>
 <div class="flex flex-col gap-1">
-<h4 class="font-bold text-lg leading-tight text-slate-900" id="summary-movie-title">Avatar: The Way of Water</h4>
+<h4 class="font-bold text-lg leading-tight text-slate-900" id="summary-movie-title" data-skel>กำลังโหลดภาพยนตร์</h4>
 <div class="flex items-center gap-1 text-sm text-slate-500 mt-1">
-<span class="px-1.5 py-0.5 rounded border border-slate-300 text-xs font-semibold" id="summary-format">IMAX 3D</span>
-<span class="px-1.5 py-0.5 rounded border border-slate-300 text-xs font-semibold" id="summary-language">EN/TH</span>
+<span class="px-1.5 py-0.5 rounded border border-slate-300 text-xs font-semibold" id="summary-format" data-skel>2D</span>
+<span class="px-1.5 py-0.5 rounded border border-slate-300 text-xs font-semibold" id="summary-language" data-skel>TH</span>
 </div>
-<p class="text-sm text-slate-600 mt-2" id="summary-cinema">Major Cineplex Siam Paragon</p>
-<p class="text-sm text-slate-600" id="summary-hall">Cinema 4</p>
-<p class="text-sm font-medium text-primary mt-1" id="summary-datetime">วันนี้, 19:30 น.</p>
+<p class="text-sm text-slate-600 mt-2" id="summary-cinema" data-skel>กำลังโหลดสาขา</p>
+<p class="text-sm text-slate-600" id="summary-hall" data-skel>โรงภาพยนตร์</p>
+<p class="text-sm font-medium text-primary mt-1" id="summary-datetime" data-skel>วันที่และเวลา</p>
 </div>
 </div>
 <div class="space-y-3 pt-4 border-t border-slate-100 border-dashed">
 <div class="flex justify-between items-start">
 <div>
-<p class="text-sm font-medium text-slate-900" id="summary-seat-label">ที่นั่งปกติ</p>
-<p class="text-xs text-slate-500" id="summary-seat-codes">E12, E13</p>
+<p class="text-sm font-medium text-slate-900" id="summary-seat-label" data-skel>ที่นั่งที่เลือก</p>
+<p class="text-xs text-slate-500" id="summary-seat-codes" data-skel>A1, A2</p>
 </div>
-<p class="text-sm font-bold text-slate-900" id="summary-seat-price">฿480.00</p>
+<p class="text-sm font-bold text-slate-900" id="summary-seat-price" data-skel>฿000</p>
 </div>
 <div class="flex justify-between items-start">
 <div>
 <p class="text-sm font-medium text-slate-900">ค่าบริการ</p>
-<p class="text-xs text-slate-500" id="summary-service-count">2 ที่นั่ง</p>
+<p class="text-xs text-slate-500" id="summary-service-count" data-skel>0 ที่นั่ง</p>
 </div>
-<p class="text-sm font-bold text-slate-900" id="summary-service-price">฿40.00</p>
+<p class="text-sm font-bold text-slate-900" id="summary-service-price" data-skel>฿00</p>
 </div>
 <div class="flex justify-between items-start pt-2">
 <p class="text-sm font-medium text-primary">ส่วนลด</p>
-<p class="text-sm font-bold text-primary" id="summary-discount">-฿0.00</p>
+<p class="text-sm font-bold text-primary" id="summary-discount" data-skel>-฿0</p>
 </div>
 </div>
 <div class="mt-6 pt-4 border-t border-slate-200 flex justify-between items-end">
 <div class="flex flex-col">
 <span class="text-xs text-slate-500">ยอดสุทธิ</span>
-<span class="text-2xl font-black text-slate-900 tracking-tight" id="summary-total">฿520.00</span>
+<span class="text-2xl font-black text-slate-900 tracking-tight" id="summary-total" data-skel>฿000</span>
 </div>
 <button class="text-sm text-primary font-bold hover:underline" id="edit-order-btn">แก้ไขรายการ</button>
 </div>
@@ -257,7 +257,7 @@
 <div class="pt-4 mt-2 border-t border-slate-100">
 <button class="w-full bg-primary hover:bg-primary-hover text-white text-lg font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-primary/30 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 group" id="confirm-payment-btn">
 <span id="confirm-payment-label">ยืนยันชำระเงิน</span>
-<span class="bg-white/20 px-2 py-0.5 rounded text-sm group-hover:bg-white/30 transition-colors" id="confirm-payment-total">฿520.00</span>
+<span class="bg-white/20 px-2 py-0.5 rounded text-sm group-hover:bg-white/30 transition-colors" id="confirm-payment-total" data-skel>฿000</span>
 </button>
 <p class="text-center text-xs text-slate-400 mt-4">
                                 การคลิกปุ่มยืนยันแสดงว่าคุณยอมรับ <a class="text-primary hover:underline" href="terms-of-service.html">เงื่อนไขการให้บริการ</a>
@@ -285,7 +285,7 @@
 <div class="max-w-xl mx-auto flex items-center gap-3">
 <div class="min-w-0 flex-1">
 <p class="text-xs text-slate-500">ยอดชำระสุทธิ</p>
-<p class="text-lg font-black text-slate-900 leading-tight" id="mobile-checkout-total">-</p>
+<p class="text-lg font-black text-slate-900 leading-tight" id="mobile-checkout-total" data-skel>฿000</p>
 </div>
 <button class="bg-primary text-white font-bold px-5 py-3 rounded-xl shadow-lg shadow-primary/30 disabled:opacity-50" id="mobile-checkout-btn" type="button">ชำระเงิน</button>
 </div>
@@ -450,7 +450,7 @@
             const movieRef = typeof moviesDatabase !== 'undefined' ? moviesDatabase[movie.id] : null;
 
             if (summaryMoviePoster) {
-                summaryMoviePoster.src = movie.poster || movieRef?.backdropImage || `https://picsum.photos/seed/${encodeURIComponent(movie.id || 'movie')}-poster/500/750`;
+                summaryMoviePoster.src = window.cinemaMovieImages.posterFor(movieRef || { id: movie.id, titleThai: movie.title, posterImage: movie.poster });
                 summaryMoviePoster.alt = `Movie poster for ${movie.title}`;
                 if (movieRef && !movieRef.posterImage && window.cinemaMovieImages?.getRealMoviePoster) {
                     window.cinemaMovieImages.getRealMoviePoster(movieRef).then((posterUrl) => {
@@ -489,6 +489,7 @@
                 }
             }
             updateActiveCodeUI();
+            document.body.classList.remove('is-loading');
         }
 
         async function refreshPreview() {
@@ -508,6 +509,7 @@
                 return false;
             } finally {
                 confirmPaymentBtn.disabled = false;
+                document.body.classList.remove('is-loading');
             }
         }
 

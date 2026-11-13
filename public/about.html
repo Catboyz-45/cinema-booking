@@ -1,29 +1,109 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>เกี่ยวกับเรา - Cinema</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet" />
+  <meta name="description" content="Cinema เว็บไซต์จองตั๋วภาพยนตร์ออนไลน์ เลือกรอบ เลือกที่นั่ง ชำระเงิน และรับตั๋ว QR ในที่เดียว"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
-<link href="site.css" rel="stylesheet"/>
-<script src="site-ui.js"></script>
+  <link href="site.css" rel="stylesheet"/>
+  <script src="cinema-api.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="info-pages.js"></script>
 </head>
-<body class="flex flex-col bg-[#f8f6f7] text-slate-900 min-h-screen font-[Inter]">
+<body class="flex flex-col min-h-screen">
 <header id="site-header"></header>
 <script>cinemaUi.header({});</script>
-  <main class="max-w-3xl mx-auto px-4 py-10">
-    <div class="bg-white border border-slate-200 rounded-2xl p-6">
-      <h1 class="text-2xl font-black mb-3">เกี่ยวกับ Cinema</h1>
-      <p class="text-slate-600">Cinema คือแพลตฟอร์มจองตั๋วภาพยนตร์ออนไลน์ที่ช่วยให้คุณค้นหารอบฉาย เลือกที่นั่ง และชำระเงินได้สะดวกในที่เดียว</p>
-      <a href="index.html" class="inline-flex mt-6 px-4 py-2 rounded-lg bg-[#e9508c] text-white font-bold">กลับหน้าแรก</a>
+
+<main class="flex-grow">
+  <section class="info-hero">
+    <div class="info-hero-in">
+      <span class="info-eyebrow"><span class="material-symbols-outlined">theaters</span>เกี่ยวกับ Cinema</span>
+      <h1>จองตั๋วหนังให้ง่าย จบในไม่กี่นาที</h1>
+      <p class="lead">เราอยากให้การไปดูหนังเริ่มต้นได้สบาย ๆ ตั้งแต่บนมือถือ เลือกรอบที่ใช่ ที่นั่งที่ชอบ จ่ายเงินแล้วรับตั๋วได้ทันที โดยไม่ต้องต่อคิวหน้าโรง</p>
+      <div class="meta"><span><span class="material-symbols-outlined">confirmation_number</span>จองออนไลน์ 24 ชั่วโมง</span><span><span class="material-symbols-outlined">qr_code_2</span>ตั๋ว QR เข้าโรงได้เลย</span><span><span class="material-symbols-outlined">stars</span>สะสมคะแนนทุกการจอง</span></div>
     </div>
-  </main>
+  </section>
+  <div class="info-wrap">
+    <div class="info-card">
+      <div class="info-note pink mb-6"><span class="material-symbols-outlined">school</span><div>
+<b>เว็บไซต์นี้เป็นโปรเจกต์เพื่อการศึกษา</b> ในรายวิชา 02739322 Information System Analysis and Design
+ข้อมูลภาพยนตร์ รอบฉาย และสาขาเป็นข้อมูลตัวอย่าง การชำระเงินใช้<b>โหมดทดสอบของ Stripe</b> จึงไม่มีการตัดเงินจริง</div></div>
+      <section class="info-section">
+        <h2 class="info-h2">ตอนนี้ในระบบมี</h2>
+        <p class="info-sub mb-4">ตัวเลขดึงจากระบบจริงทุกครั้งที่เปิดหน้านี้</p>
+        <div class="stat-row">
+          <div class="stat-box"><strong id="stat-movies">–</strong><span>ภาพยนตร์ที่กำลังฉาย</span></div>
+          <div class="stat-box"><strong id="stat-coming">–</strong><span>เรื่องในโปรแกรมหน้า</span></div>
+          <div class="stat-box"><strong id="stat-showtimes">–</strong><span>รอบฉายที่เปิดจองในสัปดาห์นี้</span></div>
+          <div class="stat-box"><strong id="stat-branches">–</strong><span>สาขาโรงภาพยนตร์</span></div>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2 class="info-h2">Cinema คืออะไร</h2>
+        <p class="info-sub">Cinema คือเว็บไซต์จองตั๋วภาพยนตร์ที่รวมทุกขั้นตอนไว้ในที่เดียว ตั้งแต่ดูหนังที่กำลังฉาย เลือกรอบและที่นั่งจากผังจริงของโรง ชำระเงินออนไลน์
+        ไปจนถึงรับตั๋ว QR เพื่อสแกนเข้าโรง ฝั่งโรงภาพยนตร์มีระบบหลังบ้านสำหรับจัดการภาพยนตร์ รอบฉาย สาขา ราคา โปรโมชั่น การเช็คอิน และรายงานยอดขาย</p>
+      </section>
+
+      <section class="info-section">
+        <h2 class="info-h2">จองตั๋วใน 4 ขั้นตอน</h2>
+        <ol class="steps mt-4">
+          <li><b>เลือกหนังและรอบ</b><p>ดูรอบฉายแยกตามวัน สาขา และระบบฉาย เช่น IMAX หรือ 4DX</p></li>
+          <li><b>เลือกที่นั่ง</b><p>ที่นั่งที่เลือกจะถูกล็อกไว้ให้คุณ <span data-fill="holdMinutes">12</span> นาที คนอื่นจองซ้อนไม่ได้</p></li>
+          <li><b>ชำระเงิน</b><p>ใช้โค้ดส่วนลดหรือแลกคะแนนได้ แล้วจ่ายผ่าน Stripe ด้วยบัตรหรือช่องทางที่รองรับ</p></li>
+          <li><b>รับตั๋ว QR</b><p>ตั๋วอยู่ในหน้า "ตั๋วของฉัน" แสดง QR ให้เจ้าหน้าที่สแกนตอนเข้าโรง</p></li>
+        </ol>
+      </section>
+
+      <section class="info-section">
+        <h2 class="info-h2">สิ่งที่เราใส่ใจ</h2>
+        <div class="feature-grid mt-4">
+          <div class="feature"><div class="ic"><span class="material-symbols-outlined">event_seat</span></div><b>ไม่มีที่นั่งซ้อน</b><p>ระบบล็อกที่นั่งระหว่างชำระเงิน และตรวจซ้ำอีกครั้งก่อนออกตั๋ว ถ้าที่นั่งหลุดระหว่างจ่าย ระบบคืนเงินให้อัตโนมัติ</p></div>
+          <div class="feature"><div class="ic"><span class="material-symbols-outlined">receipt_long</span></div><b>ราคาโปร่งใส</b><p>เห็นราคาที่นั่ง ค่าบริการ <span data-fill="serviceFeePerSeat" data-format="money">฿20</span>/ที่นั่ง และส่วนลดครบก่อนกดจ่าย ไม่มีค่าใช้จ่ายแอบแฝง</p></div>
+          <div class="feature"><div class="ic"><span class="material-symbols-outlined">verified_user</span></div><b>ชำระเงินปลอดภัย</b><p>ข้อมูลบัตรกรอกในหน้าของ Stripe โดยตรง เว็บไซต์ไม่เห็นและไม่เก็บเลขบัตรของคุณ</p></div>
+          <div class="feature"><div class="ic"><span class="material-symbols-outlined">stars</span></div><b>ยิ่งดูยิ่งคุ้ม</b><p>สมัครรับ <span data-fill="loyalty.signupBonus" data-format="number">250</span> คะแนน จองได้อีกครั้งละ <span data-fill="loyalty.pointsEarnedPerBooking">50</span> คะแนน แลกเป็นส่วนลดได้ <a class="text-primary font-semibold" href="membership.html">ดูสิทธิพิเศษ</a></p></div>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2 class="info-h2">เบื้องหลังระบบ</h2>
+        <p class="info-sub">พัฒนาเป็นเว็บแอปพลิเคชันที่ทำงานบนบริการคลาวด์ ได้แก่ Firebase Hosting (หน้าเว็บ), Firebase Authentication (บัญชีผู้ใช้),
+        Cloud Firestore (ฐานข้อมูล), Vercel (API) และ Stripe (ระบบชำระเงิน)</p>
+      </section>
+
+      <div class="flex flex-wrap gap-3 mt-8">
+        <a class="ui-btn ui-btn-primary" href="movies.html"><span class="material-symbols-outlined">movie</span>ดูหนังที่กำลังฉาย</a>
+        <a class="ui-btn border border-slate-200 bg-white" href="contact.html"><span class="material-symbols-outlined">support_agent</span>ติดต่อเรา</a>
+      </div>
+    </div>
+  </div>
+</main>
+
 <footer id="site-footer"></footer>
 <script>cinemaUi.footer();</script>
+<script>
+  (async () => {
+    const api = window.cinemaApi;
+    const set = (id, value) => { document.getElementById(id).textContent = Number(value).toLocaleString('th-TH'); };
+    try {
+      const [catalog, branches] = await Promise.all([api.request('/api/catalog', { auth: false }), api.request('/api/cinemas', { auth: false })]);
+      const movies = catalog.movies || [];
+      set('stat-movies', movies.filter((m) => m.status !== 'coming_soon').length);
+      set('stat-coming', movies.filter((m) => m.status === 'coming_soon').length);
+      set('stat-showtimes', movies.reduce((sum, m) => sum + (m.showtimes || []).reduce((s, c) => s + (c.systems || []).reduce((t, sys) => t + (sys.times || []).length, 0), 0), 0));
+      set('stat-branches', (branches.cinemas || []).length);
+    } catch (_error) { /* keep the dashes */ }
+  })();
+</script>
+<script type="module">
+  import { app, firebaseConfig } from './firebase-init.js';
+  import { initializeAuthUI } from './auth.js';
+  initializeAuthUI(app, firebaseConfig);
+</script>
 </body>
 </html>

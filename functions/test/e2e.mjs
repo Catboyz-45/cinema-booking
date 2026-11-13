@@ -192,9 +192,40 @@ await call("/api/admin/settings/pricing", { method: "PUT", body: { seatPrices: {
 
 const promo = await call("/api/admin/promotions", { method: "POST", body: { code: "half50", description: "ลด 50%", discountType: "percent", discountValue: 50 }, user: admin });
 check("admin creates promo", promo.status === 201 && promo.data.code === "HALF50");
+await call("/api/admin/promotions", { method: "POST", body: { code: "LIMIT1", discountType: "amount", discountValue: 10, totalLimit: 5 }, user: admin });
+const publicPromos = await call("/api/promotions");
+const limited = publicPromos.data.find((p) => p.code === "LIMIT1");
+check("public promos show remaining count only", limited?.remaining === 5 && publicPromos.data.find((p) => p.code === "HALF50")?.remaining === null && !("usedCount" in limited) && !("totalLimit" in limited), JSON.stringify(limited));
 const role = await call(`/api/admin/users/${bob.uid}/role`, { method: "PUT", body: { role: "admin" }, user: admin });
 check("admin can promote user", role.data.role === "admin");
 await call(`/api/admin/users/${bob.uid}/role`, { method: "PUT", body: { role: "customer" }, user: admin });
+
+// cinemas / branches
+const pubCinemas = await call("/api/cinemas");
+const seededPhuket = pubCinemas.data?.cinemas?.find((c) => c.id === "major-cineplex-central-phuket");
+check("public branch list includes seeded directory", pubCinemas.status === 200 && pubCinemas.data.cinemas.length >= 14 && seededPhuket?.region === "ภาคใต้", JSON.stringify(pubCinemas.data?.cinemas?.length));
+check("seeded branch photo is a site image with credit", seededPhuket?.image === "/img/branches/major-cineplex-central-phuket.jpg" && /CC0/.test(seededPhuket.imageCredit) && /^https:\/\/commons\.wikimedia\.org\//.test(seededPhuket.imageCreditUrl), JSON.stringify(seededPhuket));
+check("seeded branch with showtimes kept its halls", pubCinemas.data.cinemas.find((c) => c.id === "paragon-cineplex")?.halls.length > 0);
+check("customer cannot create branch", (await call("/api/admin/cinemas", { method: "POST", body: { name: "Test Branch" }, user: alice })).status === 403);
+const branchUpload = await call("/api/admin/images", { method: "POST", body: { dataUrl: `data:image/png;base64,${PNG_1PX}` }, user: admin });
+const newBranch = await call("/api/admin/cinemas", { method: "POST", body: { name: "Test Branch Bangna", branch: "Bangna, Bangkok", region: "กรุงเทพฯและปริมณฑล", systems: "Laser", image: API + branchUpload.data.path, halls: ["Hall 1", "Hall 2"], amenities: ["ที่จอดรถ"] }, user: admin });
+check("admin creates branch with uploaded photo", newBranch.status === 201 && newBranch.data.id === "test-branch-bangna" && newBranch.data.image === API + branchUpload.data.path, JSON.stringify(newBranch.data));
+check("duplicate branch name rejected", (await call("/api/admin/cinemas", { method: "POST", body: { name: "Test Branch Bangna" }, user: admin })).status === 409);
+check("bad region rejected", (await call("/api/admin/cinemas", { method: "POST", body: { name: "Bad Region", region: "Mars" }, user: admin })).status === 400);
+check("non-image photo rejected", (await call("/api/admin/cinemas", { method: "POST", body: { name: "Bad Photo", image: "javascript:alert(1)" }, user: admin })).status === 400);
+check("branch rename rejected", (await call("/api/admin/cinemas/test-branch-bangna", { method: "PUT", body: { name: "Renamed", halls: ["Hall 1", "Hall 2"] }, user: admin })).status === 400);
+const replacedBranch = await call("/api/admin/cinemas/test-branch-bangna", { method: "PUT", body: { branch: "Bangna-Trad km 3", region: "กรุงเทพฯและปริมณฑล", image: "", halls: ["Hall 1"] }, user: admin });
+check("branch updated", replacedBranch.status === 200 && replacedBranch.data.branch === "Bangna-Trad km 3" && replacedBranch.data.halls.length === 1);
+check("removed branch photo is deleted", (await fetch(API + branchUpload.data.path)).status === 404);
+const paragon = pubCinemas.data.cinemas.find((c) => c.id === "paragon-cineplex");
+check("hall with open showtimes cannot be removed", (await call("/api/admin/cinemas/paragon-cineplex", { method: "PUT", body: { ...paragon, halls: [] }, user: admin })).status === 409);
+check("branch with showtimes cannot be deleted", (await call("/api/admin/cinemas/paragon-cineplex", { method: "DELETE", user: admin })).status === 409);
+const keepPhoto = await call("/api/admin/cinemas/major-cineplex-central-phuket", { method: "PUT", body: { ...seededPhuket }, user: admin });
+check("saving a branch keeps its site photo and credit", keepPhoto.status === 200 && keepPhoto.data.imageCredit === seededPhuket.imageCredit, JSON.stringify(keepPhoto.data));
+const newPhoto = await call("/api/admin/cinemas/major-cineplex-central-phuket", { method: "PUT", body: { ...seededPhuket, image: "https://example.com/phuket.jpg" }, user: admin });
+check("replacing a branch photo clears the old credit", newPhoto.status === 200 && newPhoto.data.imageCredit === "" && newPhoto.data.imageCreditUrl === "");
+check("bad site image path rejected", (await call("/api/admin/cinemas/major-cineplex-central-phuket", { method: "PUT", body: { ...seededPhuket, image: "/img/../secret.txt" }, user: admin })).status === 400);
+check("unused branch deleted", (await call("/api/admin/cinemas/test-branch-bangna", { method: "DELETE", user: admin })).status === 200);
 
 console.log(failures ? `\n${failures} FAILED` : "\nALL PASSED");
 process.exit(failures ? 1 : 0);

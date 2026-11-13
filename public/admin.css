@@ -680,3 +680,35 @@ input[type=search].field::-webkit-search-cancel-button { -webkit-appearance: non
 .pf-rules li { display: flex; gap: 8px; line-height: 1.45; }
 .pf-rules li::before { content: '✓'; color: #0f9f6e; font-weight: 800; }
 @media (max-width: 639px) { .modal-wide .modal-panel { height: 88vh; } }
+.movie-poster .need-poster { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 5px 8px; border-radius: 10px; background: rgba(22, 17, 31, .78); color: #fff; font-size: 11.5px; font-weight: 700; backdrop-filter: blur(4px); }
+.movie-poster .need-poster .material-symbols-outlined { font-size: 16px; color: #ffb3cf; }
+
+/* ---------- branches (cinemas) ---------- */
+.branch-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.branch-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform .15s, box-shadow .15s; }
+.branch-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.branch-photo { position: relative; aspect-ratio: 4 / 3; cursor: pointer; background: linear-gradient(135deg, #f6e3ec, #e9e5f1) center / cover no-repeat; }
+.branch-photo[style] { background-color: #ece8f1; }
+.branch-photo .noimg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--primary-600); }
+.branch-photo .noimg .material-symbols-outlined { font-size: 30px; }
+.branch-photo .noimg small { font-size: 12px; font-weight: 700; }
+.branch-region { position: absolute; left: 10px; bottom: 10px; background: rgba(22, 17, 31, .78); color: #fff; backdrop-filter: blur(4px); }
+.branch-card .meta { padding: 12px 14px 4px; flex: 1; }
+.branch-card .meta b { display: block; font-size: 14.5px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.branch-card .meta small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.branch-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+.branch-stats span { display: inline-flex; align-items: center; gap: 4px; }
+.branch-stats .material-symbols-outlined { font-size: 16px; color: var(--muted); }
+.branch-card .actions { display: flex; gap: 6px; padding: 10px 14px 14px; }
+.branch-card .actions .btn:first-child { flex: 1; }
+.pv-branch { background: var(--surface); border-radius: 16px; padding: 10px 10px 14px; box-shadow: 0 1px 2px rgba(26, 21, 35, .05), 0 10px 26px rgba(26, 21, 35, .1); }
+.pv-branch-photo { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #e9508c, #16111f) center / cover no-repeat; display: grid; place-items: center; }
+.pv-branch-photo.has-image .pv-branch-noimg { display: none; }
+.pv-branch-noimg .material-symbols-outlined { font-size: 40px; color: rgba(255, 255, 255, .55); }
+.pv-branch-photo b { position: absolute; left: 8px; bottom: 8px; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(233, 80, 140, .92); color: #fff; }
+.pv-branch h5 { font-size: 14.5px; font-weight: 800; margin: 10px 2px 0; line-height: 1.35; }
+.pv-branch h5.is-empty { color: #b9b3c4; }
+.pv-branch p { font-size: 12.5px; color: var(--muted); margin: 2px 2px 0; }
+.pv-branch .pv-branch-sys { font-size: 11.5px; }
+@media (max-width: 639px) { .branch-grid { grid-template-columns: minmax(0, 1fr); } }

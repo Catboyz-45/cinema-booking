@@ -670,77 +670,13 @@ Object.entries(legacyImageFixes).forEach(([movieId, imageData]) => {
     }
 });
 
-const posterCache = new Map();
-
-function getCachedPoster(movieId) {
-    if (posterCache.has(movieId)) {
-        return posterCache.get(movieId);
-    }
-    try {
-        const saved = localStorage.getItem(`cinema.poster.${movieId}`);
-        if (saved) {
-            posterCache.set(movieId, saved);
-            return saved;
-        }
-    } catch (_error) {
-    }
-    return null;
-}
-
-function setCachedPoster(movieId, posterUrl) {
-    if (!movieId || !posterUrl) return;
-    posterCache.set(movieId, posterUrl);
-    try {
-        localStorage.setItem(`cinema.poster.${movieId}`, posterUrl);
-    } catch (_error) {
-    }
-}
-
-async function fetchWikipediaPosterByTitle(title) {
-    const normalizedTitle = String(title || '').trim();
-    if (!normalizedTitle) return null;
-
-    const candidates = [
-        normalizedTitle,
-        `${normalizedTitle} (film)`,
-        `${normalizedTitle} (2024 film)`,
-        `${normalizedTitle} (2025 film)`
-    ];
-
-    for (const candidate of candidates) {
-        const slug = encodeURIComponent(candidate.replace(/\s+/g, '_'));
-        try {
-            const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${slug}`);
-            if (!response.ok) continue;
-            const data = await response.json();
-            const imageUrl = data?.originalimage?.source || data?.thumbnail?.source || null;
-            if (imageUrl) return imageUrl;
-        } catch (_error) {
-        }
-    }
-
-    return null;
-}
-
+// Posters come only from images the admin uploads. Without one, the movie's backdrop / trailer image is used.
+// (Automatic poster lookups from Wikipedia were removed.)
 async function getRealMoviePoster(movie) {
     if (!movie?.id) {
         return null;
     }
-
-    const cached = getCachedPoster(movie.id);
-    if (cached) return cached;
-
-    const posterFromWiki = await fetchWikipediaPosterByTitle(movie.titleEng || movie.titleThai);
-    if (posterFromWiki) {
-        setCachedPoster(movie.id, posterFromWiki);
-        return posterFromWiki;
-    }
-
-    const fallback = movie.backdropImage || movie.trailerImage || null;
-    if (fallback) {
-        setCachedPoster(movie.id, fallback);
-    }
-    return fallback;
+    return movie.posterImage || movie.backdropImage || movie.trailerImage || null;
 }
 
 if (typeof window !== 'undefined') {

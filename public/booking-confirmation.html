@@ -61,18 +61,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
 <link href="site.css" rel="stylesheet"/>
 </head>
-<body class="bg-background-light text-slate-900 min-h-screen flex flex-col font-body">
+<body class="is-loading bg-background-light text-slate-900 min-h-screen flex flex-col font-body">
 <!-- Header -->
 <header id="site-header"></header>
 <script>cinemaUi.header({"step": 4});</script>
 <main class="flex-grow container mx-auto px-4 py-8 lg:px-8 lg:py-12 max-w-7xl">
 <!-- Success Banner -->
 <div class="flex flex-col items-center justify-center text-center mb-10 animate-fade-in-up">
-<div class="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6 shadow-sm border border-green-200" id="status-icon-wrap">
+<div class="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6 shadow-sm border border-green-200" id="status-icon-wrap" data-skel>
 <span class="material-symbols-outlined text-5xl text-green-600" id="status-icon">check_circle</span>
 </div>
-<h1 class="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight mb-2" id="status-heading">การจองสำเร็จ!</h1>
-<p class="text-slate-500 text-lg" id="status-subtitle">ขอบคุณที่เลือกชมภาพยนตร์กับ Cinema ขอให้สนุกกับการรับชมครับ</p>
+<h1 class="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight mb-2" id="status-heading" data-skel>กำลังโหลดตั๋วของคุณ</h1>
+<p class="text-slate-500 text-lg" id="status-subtitle" data-skel>กรุณารอสักครู่</p>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 <!-- Left Column: The E-Ticket -->
@@ -80,13 +80,13 @@
 <!-- Ticket Card Container -->
 <div id="ticket-card" class="relative bg-surface-light rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex flex-col md:flex-row">
 <!-- Movie Poster Section (Left/Top) -->
-<div class="w-full md:w-1/3 bg-slate-900 relative">
-<img alt="Movie Poster Avatar" class="w-full h-64 md:h-full object-cover opacity-80" data-alt="Abstract cinematic blue lighting representing a movie scene" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpk6EXzej-BZgz0oKODINWSyHQyYa8sdqkEvSJGYsSn9CMyTNg42k74idNKABxrIO_Mj4pPTh4oBy6grAWSFiR5ypqkQYt60gFozBBcw-aaRRixzXfMy35oQcXdaFXHkPdTiD99WDVk6PFSnCvRwbiAoD7aRWxbK75_qrTA7pYLKTlhgfYw75A8xik-UAWKotGWwRVvYh-cskBesrMFpwn78ygb65APb-2wqCp4hBlQ5M_bYbwnOlZtSYiGA3XZV28qAueID2E5Hqy"/>
+<div class="w-full md:w-1/3 bg-slate-900 relative min-h-[16rem]">
+<img id="ticket-poster" alt="" class="w-full h-64 md:h-full object-cover opacity-80"/>
 <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
 <div class="absolute bottom-4 left-4 right-4 text-white">
-<span class="inline-block px-2 py-0.5 rounded bg-primary text-xs font-bold mb-2" id="ticket-format"></span>
-<h3 class="text-xl font-bold leading-tight drop-shadow-md" id="ticket-movie-title"></h3>
-<p class="text-slate-300 text-sm mt-1" id="ticket-movie-meta"></p>
+<span class="inline-block px-2 py-0.5 rounded bg-primary text-xs font-bold mb-2" id="ticket-format" data-skel>2D</span>
+<h3 class="text-xl font-bold leading-tight drop-shadow-md" id="ticket-movie-title" data-skel>กำลังโหลดภาพยนตร์</h3>
+<p class="text-slate-300 text-sm mt-1" id="ticket-movie-meta" data-skel>ข้อมูลภาพยนตร์</p>
 </div>
 </div>
 <!-- Ticket Details Section (Middle) -->
@@ -99,29 +99,26 @@
 <div class="grid grid-cols-2 gap-y-6 gap-x-4">
 <div class="col-span-2">
 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">โรงภาพยนตร์</p>
-<p class="text-slate-900 font-bold text-lg" id="ticket-cinema">Paragon Cineplex</p>
-<p class="text-slate-500 text-sm" id="ticket-hall">Hall 4 • 4DX System</p>
+<p class="text-slate-900 font-bold text-lg" id="ticket-cinema" data-skel>กำลังโหลดสาขา</p>
+<p class="text-slate-500 text-sm" id="ticket-hall" data-skel>โรงภาพยนตร์</p>
 </div>
 <div>
 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">วันที่</p>
-<p class="text-slate-900 font-semibold text-base" id="ticket-date">14 ต.ค. 2023</p>
+<p class="text-slate-900 font-semibold text-base" id="ticket-date" data-skel>วันที่</p>
 </div>
 <div>
 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">เวลา</p>
-<p class="text-slate-900 font-semibold text-base" id="ticket-time">19:30 น.</p>
+<p class="text-slate-900 font-semibold text-base" id="ticket-time" data-skel>เวลา</p>
 </div>
 <div class="col-span-2 bg-slate-50 rounded-lg p-3 border border-slate-100">
 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">ที่นั่งของคุณ</p>
-<div class="flex gap-2" id="ticket-seats-list">
-<span class="inline-flex items-center justify-center px-3 py-1 rounded-md bg-slate-900 text-white font-bold text-lg shadow-sm">F12</span>
-<span class="inline-flex items-center justify-center px-3 py-1 rounded-md bg-slate-900 text-white font-bold text-lg shadow-sm">F13</span>
-</div>
+<div class="flex gap-2" id="ticket-seats-list" data-skel><span class="px-3 py-1 text-lg font-bold">A1</span><span class="px-3 py-1 text-lg font-bold">A2</span></div>
 </div>
 </div>
 <div class="mt-6 pt-6 border-t border-dashed border-slate-200 flex justify-between items-end">
 <div>
 <p class="text-slate-400 text-xs">Booking ID</p>
-<p class="text-primary font-mono font-bold text-lg tracking-wider" id="ticket-booking-id">BK-882910</p>
+<p class="text-primary font-mono font-bold text-lg tracking-wider" id="ticket-booking-id" data-skel>BK-000000</p>
 </div>
 <div class="md:hidden">
 <!-- Mobile QR Placeholder indicator -->
@@ -135,7 +132,7 @@
 <div class="w-full md:w-48 bg-slate-50 border-l border-dashed border-slate-200 flex flex-col items-center justify-center p-6 gap-3">
 <div class="bg-white p-2 rounded-lg shadow-sm border border-slate-100">
 <!-- QR Code (generated from the booking QR payload) -->
-<img id="ticket-qr" class="w-28 h-28" alt="QR Code สำหรับเข้าชม" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+<img id="ticket-qr" class="w-28 h-28" alt="QR Code สำหรับเข้าชม" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-skel>
 </div>
 <p class="text-xs text-slate-500 text-center leading-tight">สแกนที่หน้าโรงภาพยนตร์เพื่อเข้าชม</p>
 </div>
@@ -147,8 +144,8 @@
 <span class="material-symbols-outlined text-2xl">star</span>
 </div>
 <div>
-<h3 class="font-bold text-lg text-yellow-400" id="loyalty-earned">คุณได้รับ 50 คะแนน!</h3>
-<p class="text-slate-300 text-sm" id="loyalty-total">จากการจองรอบนี้ (ยอดรวม 0 คะแนน)</p>
+<h3 class="font-bold text-lg text-yellow-400" id="loyalty-earned" data-skel-wait>กำลังโหลดคะแนน</h3>
+<p class="text-slate-300 text-sm" id="loyalty-total" data-skel-wait>คะแนนสะสม</p>
 </div>
 </div>
 </div>
@@ -174,25 +171,25 @@
                     </h3>
 <div class="space-y-4">
 <div class="flex justify-between items-center text-sm">
-<span class="text-slate-500" id="summary-ticket-count">ตั๋วภาพยนตร์ (x2)</span>
-<span class="text-slate-900 font-medium" id="summary-seat-subtotal">500 บาท</span>
+<span class="text-slate-500" id="summary-ticket-count" data-skel>ตั๋วภาพยนตร์</span>
+<span class="text-slate-900 font-medium" id="summary-seat-subtotal" data-skel>000 บาท</span>
 </div>
 <div class="flex justify-between items-center text-sm">
 <span class="text-slate-500">ค่าธรรมเนียมบริการ</span>
-<span class="text-slate-900 font-medium" id="summary-service-fee">20 บาท</span>
+<span class="text-slate-900 font-medium" id="summary-service-fee" data-skel>00 บาท</span>
 </div>
 <div class="flex justify-between items-center text-sm">
 <span class="text-slate-500">ส่วนลดสมาชิก</span>
-<span class="text-green-600 font-medium" id="summary-discount">-50 บาท</span>
+<span class="text-green-600 font-medium" id="summary-discount" data-skel>-0 บาท</span>
 </div>
 <div class="h-px bg-slate-100 my-2"></div>
 <div class="flex justify-between items-center">
 <span class="text-slate-900 font-bold">ยอดสุทธิ</span>
-<span class="text-primary font-black text-xl" id="summary-total">470 บาท</span>
+<span class="text-primary font-black text-xl" id="summary-total" data-skel>000 บาท</span>
 </div>
 <div class="flex justify-between items-center text-xs text-slate-400 mt-1">
-<span id="summary-payment-method">ชำระผ่าน Credit Card</span>
-<span id="summary-card-last4">**** 4242</span>
+<span id="summary-payment-method" data-skel>วิธีชำระเงิน</span>
+<span id="summary-card-last4" data-skel>****</span>
 </div>
 </div>
 </div>
@@ -243,7 +240,7 @@
         }
 
         const movieTitle = document.getElementById('ticket-movie-title');
-        const ticketPoster = document.querySelector('#ticket-card img[alt="Movie Poster Avatar"]');
+        const ticketPoster = document.getElementById('ticket-poster');
         const cinemaEl = document.getElementById('ticket-cinema');
         const hallEl = document.getElementById('ticket-hall');
         const dateEl = document.getElementById('ticket-date');
@@ -305,7 +302,12 @@
 
         function applyStatusView(booking) {
             const view = STATUS_VIEW[booking.status];
-            if (!view) return;
+            if (!view) {
+                // paid ticket: the page starts with loading text, so set the success message here
+                document.getElementById('status-heading').textContent = 'การจองสำเร็จ!';
+                document.getElementById('status-subtitle').textContent = 'ขอบคุณที่เลือกชมภาพยนตร์กับ Cinema ขอให้สนุกกับการรับชมครับ';
+                return;
+            }
             document.getElementById('status-icon').textContent = view.icon;
             document.getElementById('status-icon').className = `material-symbols-outlined text-5xl text-${view.color}-600`;
             document.getElementById('status-icon-wrap').className = `h-20 w-20 rounded-full bg-${view.color}-100 flex items-center justify-center mb-6 shadow-sm border border-${view.color}-200`;
@@ -362,10 +364,11 @@
                     ? 'คืนเงินแล้ว'
                     : `${PAYMENT_LABELS[booking.payment?.method] || 'ชำระเงินออนไลน์'}${booking.payment?.gateway === 'stripe' ? ' (Stripe ทดสอบ)' : ''}`;
                 cardLast4El.textContent = booking.payment?.cardLast4 ? `**** ${booking.payment.cardLast4}` : '';
+                document.body.classList.remove('is-loading');
 
                 const movieRef = getMovieRef(booking.movie, booking.showtime);
                 if (ticketPoster) {
-                    ticketPoster.src = (movieRef?.posterImage || movieRef?.backdropImage || movieRef?.trailerImage || booking.movie?.poster || ticketPoster.src);
+                    ticketPoster.src = window.cinemaMovieImages.posterFor(movieRef || { id: booking.movie?.id, titleThai: booking.movie?.title, posterImage: booking.movie?.poster });
                     ticketPoster.alt = `Poster for ${booking.movie.title}`;
 
                     if (movieRef && window.cinemaMovieImages?.getRealMoviePoster) {
@@ -390,8 +393,10 @@
 
                 if (Number.isFinite(Number(totalPoints))) {
                     loyaltyTotalEl.textContent = `จากการจองรอบนี้ (ยอดรวม ${Number(totalPoints).toLocaleString('th-TH')} คะแนน)`;
+                    [loyaltyEarnedEl, loyaltyTotalEl].forEach((el) => el.removeAttribute('data-skel-wait'));
                 } else {
                     loyaltyTotalEl.textContent = 'จากการจองรอบนี้';
+                    [loyaltyEarnedEl, loyaltyTotalEl].forEach((el) => el.removeAttribute('data-skel-wait'));
                 }
             })
             .catch((error) => {

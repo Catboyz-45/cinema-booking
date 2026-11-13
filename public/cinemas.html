@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block" rel="stylesheet"/>
 <link href="site.css" rel="stylesheet"/>
 </head>
-<body class="bg-background-light text-slate-900 min-h-screen flex flex-col font-[Inter]">
+<body class="is-loading bg-background-light text-slate-900 min-h-screen flex flex-col font-[Inter]">
 <header id="site-header"></header>
 <script>cinemaUi.header({"active": "cinemas", "search": {"id": "page-search-input", "placeholder": "ค้นหาโรงภาพยนตร์"}});</script>
 
@@ -30,131 +30,52 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 mb-6">
-      <button class="region-filter-btn px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold whitespace-nowrap" data-region="all">ทั้งหมด</button>
-      <button class="region-filter-btn px-4 py-2 bg-background-light hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium whitespace-nowrap transition" data-region="กรุงเทพฯและปริมณฑล">กรุงเทพฯและปริมณฑล</button>
-      <button class="region-filter-btn px-4 py-2 bg-background-light hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium whitespace-nowrap transition" data-region="ภาคเหนือ">ภาคเหนือ</button>
-      <button class="region-filter-btn px-4 py-2 bg-background-light hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium whitespace-nowrap transition" data-region="ภาคตะวันออกเฉียงเหนือ">ภาคตะวันออกเฉียงเหนือ</button>
-      <button class="region-filter-btn px-4 py-2 bg-background-light hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium whitespace-nowrap transition" data-region="ภาคตะวันออก">ภาคตะวันออก</button>
-      <button class="region-filter-btn px-4 py-2 bg-background-light hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium whitespace-nowrap transition" data-region="ภาคใต้">ภาคใต้</button>
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 mb-6" id="region-filters" role="group" aria-label="กรองตามภูมิภาค">
+      <button class="region-filter-btn px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold whitespace-nowrap" data-region="all" type="button">ทั้งหมด</button>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="cinema-grid">
+      <div class="aspect-[4/3] rounded-xl" data-skel></div><div class="aspect-[4/3] rounded-xl" data-skel></div><div class="aspect-[4/3] rounded-xl hidden md:block" data-skel></div><div class="aspect-[4/3] rounded-xl hidden lg:block" data-skel></div><div class="aspect-[4/3] rounded-xl hidden xl:block" data-skel></div>
     </div>
+    <p class="mt-10 text-xs text-slate-400 leading-relaxed" id="photo-note">ภาพสาขาบางส่วนมาจาก <a class="underline" href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a> ภายใต้สัญญาอนุญาตที่ระบุใต้แต่ละภาพ (เช่น CC BY-SA) ภาพถูกครอปและย่อขนาดเพื่อแสดงผล กดที่เครดิตเพื่อดูภาพต้นฉบับและรายละเอียดสัญญาอนุญาต</p>
   </main>
 
 <footer id="site-footer"></footer>
 <script>cinemaUi.footer();</script>
 
   <script>
-    (() => {
+    (async () => {
+      // Branches come from the admin (สาขา menu): name, location, region, systems and an uploaded photo.
+      const api = window.cinemaApi;
+      const esc = api.escapeHtml;
       const searchInput = document.getElementById('page-search-input');
       const cinemaGrid = document.getElementById('cinema-grid');
-      const filterButtons = Array.from(document.querySelectorAll('.region-filter-btn'));
+      const filterBar = document.getElementById('region-filters');
       let activeRegion = 'all';
-      const locationImageFallback = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Pattaya_beach_from_view_point.jpg/640px-Pattaya_beach_from_view_point.jpg';
+      let cinemas = [];
 
-      const cinemas = [
-        {
-          name: 'Paragon Cineplex',
-          branch: 'Siam Paragon, Bangkok',
-          region: 'กรุงเทพฯและปริมณฑล',
-          systems: 'IMAX • 4DX • VIP',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Siam_Paragon_06.23.jpg'
-        },
-        {
-          name: 'Major Cineplex Ratchayothin',
-          branch: 'Ratchayothin, Bangkok',
-          region: 'กรุงเทพฯและปริมณฑล',
-          systems: 'Laser • Kids Cinema',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Major_Cineplex_Ratchayothin_and_traffic.jpg'
-        },
-        {
-          name: 'ICON CINECONIC',
-          branch: 'ICONSIAM, Bangkok',
-          region: 'กรุงเทพฯและปริมณฑล',
-          systems: 'IMAX • Dolby Atmos',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Magnolias_Waterfront_Residences_Iconsiam.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Westgate',
-          branch: 'Nonthaburi',
-          region: 'กรุงเทพฯและปริมณฑล',
-          systems: 'Laser • MX4D',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Central_Westgate_%2855%29.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Chiangmai Airport',
-          branch: 'Chiang Mai',
-          region: 'ภาคเหนือ',
-          systems: 'Laser • Kids Cinema',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ancient_city_wall_and_Chang_Phueak_Gate_in_Chiang_Mai.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Phitsanulok',
-          branch: 'Phitsanulok',
-          region: 'ภาคเหนือ',
-          systems: 'Digital Cinema',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Route_12_in_Phitsanulok_2.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Korat',
-          branch: 'Nakhon Ratchasima',
-          region: 'ภาคตะวันออกเฉียงเหนือ',
-          systems: 'IMAX • Laser',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/2019_02_Central_Mall_Korat_exterior.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Khon Kaen',
-          branch: 'Khon Kaen',
-          region: 'ภาคตะวันออกเฉียงเหนือ',
-          systems: 'Laser • Dolby Atmos',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ubosot_Wat_Klang_Khon_Kaen.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Udon',
-          branch: 'Udon Thani',
-          region: 'ภาคตะวันออกเฉียงเหนือ',
-          systems: 'Digital Cinema',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Udon_Thani_-_The_City_Pillar_Shrine_-_0002.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Rayong',
-          branch: 'Rayong',
-          region: 'ภาคตะวันออก',
-          systems: 'Laser • 3D',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Rayong_Museum.jpg'
-        },
-        {
-          name: 'Major Cineplex Harbor Pattaya',
-          branch: 'Pattaya, Chonburi',
-          region: 'ภาคตะวันออก',
-          systems: 'Digital Cinema • Kids Cinema',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Pattaya_beach_from_view_point.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Phuket',
-          branch: 'Phuket',
-          region: 'ภาคใต้',
-          systems: 'IMAX • Laser',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Central_Phuket_shopping_mall.jpg'
-        },
-        {
-          name: 'Major Cineplex Central Hatyai',
-          branch: 'Hat Yai, Songkhla',
-          region: 'ภาคใต้',
-          systems: 'Digital Cinema • Dolby Atmos',
-          image: 'https://commons.wikimedia.org/wiki/Special:FilePath/View_of_Hat_Yai_City_%28I%29.jpg'
-        }
-      ];
+      try {
+        const data = await api.request('/api/cinemas', { auth: false });
+        cinemas = data.cinemas || [];
+        const regions = (data.regions || []).filter((region) => cinemas.some((cinema) => cinema.region === region));
+        filterBar.insertAdjacentHTML('beforeend', regions.map((region) => `
+          <button class="region-filter-btn px-4 py-2 bg-background-light hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium whitespace-nowrap transition" data-region="${esc(region)}" type="button">${esc(region)}</button>`).join(''));
+      } catch (error) {
+        cinemaGrid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500">โหลดรายชื่อสาขาไม่สำเร็จ ${esc(error.message || '')}</div>`;
+        document.body.classList.remove('is-loading');
+        return;
+      }
+
+      const photoHtml = (cinema) => cinema.image
+        ? `<img alt="${esc(cinema.name)}" class="w-full h-full object-cover" src="${esc(cinema.image)}" loading="lazy" onerror="this.remove()"/>`
+        : '';
 
       function renderCinemas() {
         const keyword = (searchInput?.value || '').trim().toLowerCase();
         const filtered = cinemas.filter((cinema) => {
           const passRegion = activeRegion === 'all' || cinema.region === activeRegion;
           const bag = `${cinema.name} ${cinema.branch} ${cinema.region} ${cinema.systems}`.toLowerCase();
-          const passKeyword = !keyword || bag.includes(keyword);
-          return passRegion && passKeyword;
+          return passRegion && (!keyword || bag.includes(keyword));
         });
 
         if (!filtered.length) {
@@ -164,32 +85,36 @@
 
         cinemaGrid.innerHTML = filtered.map((cinema) => `
           <div class="group flex flex-col gap-3 rounded-xl">
-            <div class="relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-200 shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
-              <img alt="${cinema.name}" class="w-full h-full object-cover" src="${cinema.image || locationImageFallback}" onerror="this.onerror=null;this.src='${locationImageFallback}';" />
-              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-3">
-                <span class="inline-flex bg-primary/90 text-white text-[11px] font-semibold px-2 py-1 rounded">${cinema.region}</span>
-              </div>
+            <div class="relative aspect-[4/3] rounded-xl overflow-hidden shadow-sm transition-transform duration-300 group-hover:-translate-y-1 bg-gradient-to-br from-primary to-slate-900 grid place-items-center">
+              <span class="material-symbols-outlined text-white/50 text-5xl">storefront</span>
+              <div class="absolute inset-0">${photoHtml(cinema)}</div>
+              ${cinema.region ? `<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-3">
+                <span class="inline-flex bg-primary/90 text-white text-[11px] font-semibold px-2 py-1 rounded">${esc(cinema.region)}</span>
+              </div>` : ''}
             </div>
             <div>
-              <h3 class="font-bold text-slate-900 text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">${cinema.name}</h3>
-              <p class="text-sm text-slate-500 mt-1">${cinema.branch}</p>
-              <p class="text-xs text-slate-500 mt-1">${cinema.systems}</p>
+              <h3 class="font-bold text-slate-900 text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">${esc(cinema.name)}</h3>
+              ${cinema.branch ? `<p class="text-sm text-slate-500 mt-1">${esc(cinema.branch)}</p>` : ''}
+              ${cinema.systems ? `<p class="text-xs text-slate-500 mt-1">${esc(cinema.systems)}</p>` : ''}
+              ${cinema.image && cinema.imageCredit ? `<p class="text-[11px] text-slate-400 mt-1.5 leading-snug">ภาพ: ${cinema.imageCreditUrl ? `<a class="hover:underline" href="${esc(cinema.imageCreditUrl)}" target="_blank" rel="noopener">${esc(cinema.imageCredit)}</a>` : esc(cinema.imageCredit)}</p>` : ''}
             </div>
           </div>
         `).join('');
       }
 
-      filterButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          activeRegion = button.getAttribute('data-region') || 'all';
-          filterButtons.forEach((btn) => {
-            btn.classList.remove('bg-slate-900', 'text-white');
-            btn.classList.add('bg-background-light', 'text-slate-600');
-          });
-          button.classList.remove('bg-background-light', 'text-slate-600');
-          button.classList.add('bg-slate-900', 'text-white');
-          renderCinemas();
+      filterBar.addEventListener('click', (event) => {
+        const button = event.target.closest('.region-filter-btn');
+        if (!button) return;
+        activeRegion = button.getAttribute('data-region') || 'all';
+        filterBar.querySelectorAll('.region-filter-btn').forEach((btn) => {
+          const on = btn === button;
+          btn.classList.toggle('bg-slate-900', on);
+          btn.classList.toggle('text-white', on);
+          btn.classList.toggle('font-bold', on);
+          btn.classList.toggle('bg-background-light', !on);
+          btn.classList.toggle('text-slate-600', !on);
         });
+        renderCinemas();
       });
 
       if (searchInput) {
@@ -197,7 +122,7 @@
       }
 
       renderCinemas();
-
+      document.body.classList.remove('is-loading');
     })();
   </script>
 
